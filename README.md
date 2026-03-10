@@ -10,7 +10,7 @@ architecture and key folders:
 ```
 lib/
 ├── main.dart              # Application entry point
-├── firebase.dart          # Firebase configuration
+├── firebase_options.dart          # Firebase configuration
 ├── bloc/                  # State management (BLoC pattern)
 ├── data/                  # Data layer
 │   ├── models/           # Data models and entities
