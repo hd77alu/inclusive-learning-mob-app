@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'mentor_profile_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/mentorship_bloc.dart';
@@ -18,6 +19,18 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Sign Language', 'Braille'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Auth guard — redirect to sign up if not logged in
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        Navigator.pushReplacementNamed(context, '/signup');
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -176,7 +189,29 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
           final mentors = _filtered(state.mentors);
 
           if (mentors.isEmpty) {
-            return const Center(child: Text('No mentors found'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline,
+                      size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No mentors available yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Check back soon!',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(
@@ -355,19 +390,32 @@ class _MentorCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _actionButton(
+                        context: context,
                         icon: Icons.bookmark_border,
                         label: 'Save',
                         onTap: () {},
                       ),
                       _actionButton(
+                        context: context,
                         icon: Icons.call,
                         label: 'Call',
-                        onTap: () {},
+                        onTap: () => _confirmAction(
+                          context,
+                          title: 'Call Mentor',
+                          message:
+                              'Do you want to call ${mentor.name}?',
+                        ),
                       ),
                       _actionButton(
+                        context: context,
                         icon: Icons.videocam,
                         label: 'Video',
-                        onTap: () {},
+                        onTap: () => _confirmAction(
+                          context,
+                          title: 'Video Session',
+                          message:
+                              'Start a video session with ${mentor.name}?',
+                        ),
                       ),
                     ],
                   ),
@@ -380,7 +428,32 @@ class _MentorCard extends StatelessWidget {
     );
   }
 
+  void _confirmAction(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _actionButton({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
