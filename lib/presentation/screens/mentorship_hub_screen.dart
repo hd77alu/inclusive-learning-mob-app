@@ -23,7 +23,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
   @override
   void initState() {
     super.initState();
-    // Auth guard — redirect unauthenticated users to sign up
+    // Auth guard — redirect only if truly not signed in
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacementNamed(context, '/signup');

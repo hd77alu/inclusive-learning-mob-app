@@ -20,7 +20,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
   void initState() {
     super.initState();
 
-    // Auth guard
+    // Auth guard — only block if truly not signed in at all
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacementNamed(context, '/signup');
@@ -200,6 +200,9 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
   // Certificate card widget
   Widget _buildCertificateCard() {
     final user = FirebaseAuth.instance.currentUser;
+    final displayName = (user == null || user.isAnonymous)
+        ? 'Guest Learner'
+        : (user.email ?? 'Learner');
     return FadeTransition(
       opacity: _fadeAnim,
       child: Padding(
@@ -228,7 +231,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                user?.email ?? 'Learner',
+                displayName,
                 style: const TextStyle(
                   color: _teal,
                   fontSize: 13,
