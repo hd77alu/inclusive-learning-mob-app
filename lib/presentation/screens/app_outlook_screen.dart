@@ -104,7 +104,7 @@ class OutlookScreen extends StatelessWidget {
                   _person(
                     const Color(0xFF1A7AD4),
                     const Color(0xFFF5C090),
-                    '🧒',
+                    '🧑‍🦲',
                   ),
                   _person(
                     const Color(0xFF4A90D9),
@@ -339,28 +339,33 @@ class OutlookScreen extends StatelessWidget {
         'icon': Icons.menu_book,
         'color': const Color(0xFF4A90D9),
         'label': 'Lessons',
+        'route': '/discover',
       },
       {
         'icon': Icons.play_circle_fill,
         'color': const Color(0xFFE04A4A),
         'label': 'Videos',
+        'route': '',
       },
       {
         'icon': Icons.palette,
         'color': const Color(0xFF9B59B6),
         'label': 'Creative',
+        'route': '',
       },
       {
         'icon': Icons.movie,
         'color': const Color(0xFF1a5fb4),
         'label': 'Movies',
+        'route': '',
       },
       {
         'icon': Icons.chat_bubble,
         'color': const Color(0xFF00A89A),
         'label': 'Chat',
+        'route': '',
       },
-      {'icon': Icons.forum, 'color': const Color(0xFFF0B429), 'label': 'Forum'},
+      {'icon': Icons.forum, 'color': const Color(0xFFF0B429), 'label': 'Forum', 'route': ''},
     ];
 
     return Padding(
@@ -375,13 +380,18 @@ class OutlookScreen extends StatelessWidget {
           return InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${item['label']} — coming soon!'),
-                  duration: const Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final route = item['route'] as String;
+              if (route.isNotEmpty) {
+                Navigator.pushNamed(context, route);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${item['label']} — coming soon!'),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             child: Container(
               decoration: BoxDecoration(
@@ -416,7 +426,7 @@ class OutlookScreen extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => Navigator.pushNamed(context, '/signup'),
+          onPressed: () => Navigator.pushNamed(context, '/accessibility-setup'),
           style: ElevatedButton.styleFrom(
             backgroundColor: teal,
             foregroundColor: Colors.black,
