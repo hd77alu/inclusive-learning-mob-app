@@ -363,7 +363,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                   width: 20,
                   height: 20,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (context, e, s) => const Icon(
                     Icons.g_mobiledata,
                     size: 20,
                     color: Color(0xFF4285F4),
