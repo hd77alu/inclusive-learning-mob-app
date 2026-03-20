@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "685264593642",
+    "project_id": "inclusivelearningapp",
+    "storage_bucket": "inclusivelearningapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685264593642:android:4a1027af3110b031faed93",
+        "android_client_info": {
+          "package_name": "com.example.inclusive_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAREGuUk6iBpmcS1u4tA9qVr9NykP-nnOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
