@@ -1,103 +1,104 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/auth_bloc.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  App Outlook / Home Screen
-//  • Fully stateless — auth state read from AuthBloc
-//  • Hero section fades in with AnimatedOpacity
-//  • Profile sheet is auth-aware (shows real user data when signed in)
-//  • Responsive: compact for ≤ 5.5″, spacious for ≥ 6.7″
+//  App Outlook Screen  (Welcome / Landing)
+//  • Teal scaffold with classroom background + inner phone carousel
+//  • Glowing "Start here!" button navigates to /signup
+//  • Profile button opens auth-aware bottom sheet
 // ─────────────────────────────────────────────────────────────────────────────
 
 class OutlookScreen extends StatefulWidget {
   const OutlookScreen({super.key});
-
   @override
   State<OutlookScreen> createState() => _OutlookScreenState();
 }
 
 class _OutlookScreenState extends State<OutlookScreen>
     with SingleTickerProviderStateMixin {
-  static const Color teal = Color(0xFF00D4D4);
-
-  late final AnimationController _animController;
-  late final Animation<double> _fadeAnim;
-  late final Animation<Offset> _slideAnim;
+  late AnimationController _glowCtrl;
+  late Animation<double> _glowAnim;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+    _glowCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _glowAnim = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeIn,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
-
-    // Trigger the entrance animation after the first frame.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _animController.forward();
-    });
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _glowCtrl.dispose();
     super.dispose();
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Treat ≥ 6.7″ phones (≥ 411 dp wide) and tablets as "large".
-    final isLarge = screenWidth >= 400;
-
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          // Already signed in — nothing extra to do on this screen.
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Column(
+    return Scaffold(
+      backgroundColor: const Color(0xFF00D9D9),
+      body: SafeArea(
+        child: Column(
           children: [
-            _AppHeader(teal: teal),
+            // Top title
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Inclusive Learning Platform',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+
+            // Main area: classroom background + inner phone
             Expanded(
-              child: SingleChildScrollView(
-                child: FadeTransition(
-                  opacity: _fadeAnim,
-                  child: SlideTransition(
-                    position: _slideAnim,
-                    child: Column(
-                      children: [
-                        _HeroIllustration(teal: teal, isLarge: isLarge),
-                        SizedBox(height: isLarge ? 16 : 10),
-                        const _DotIndicator(teal: teal),
-                        SizedBox(height: isLarge ? 12 : 8),
-                        _WelcomeText(isLarge: isLarge),
-                        SizedBox(height: isLarge ? 22 : 14),
-                        _IconGrid(isLarge: isLarge),
-                        SizedBox(height: isLarge ? 22 : 14),
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            if (state is AuthAuthenticated) {
-                              return const SizedBox.shrink();
-                            }
-                            return _StartButton(teal: teal);
-                          },
-                        ),
-                        SizedBox(height: isLarge ? 28 : 20),
-                      ],
+              child: Stack(
+                children: [
+                  const _ClassroomBackground(),
+                  Center(child: _InnerPhone(onProfileTap: () => _showProfileSheet(context))),
+                ],
+              ),
+            ),
+
+            // Glowing "Start here!" button
+            AnimatedBuilder(
+              animation: _glowAnim,
+              builder: (_, _) => GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/signup'),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 64, vertical: 14),
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00D9D9),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00D9D9)
+                            .withValues(alpha: 0.45 + 0.45 * _glowAnim.value),
+                        blurRadius: 20 + 16 * _glowAnim.value,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Start here!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ),
                 ),
@@ -110,107 +111,10 @@ class _OutlookScreenState extends State<OutlookScreen>
   }
 }
 
-// ── Sub-widgets (all stateless) ───────────────────────────────────────────────
+// ── Auth-aware profile sheet ──────────────────────────────────────────────────
 
-class _AppHeader extends StatelessWidget {
-  const _AppHeader({required this.teal});
-  final Color teal;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: teal,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 12,
-        bottom: 14,
-      ),
-      child: const Text(
-        'Inclusive Learning Platform',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroIllustration extends StatelessWidget {
-  const _HeroIllustration({required this.teal, required this.isLarge});
-  final Color teal;
-  final bool isLarge;
-
-  static const _people = [
-    ('👴', Color(0xFFE07B30), Color(0xFFF5C5A3)),
-    ('👦', Color(0xFF4A90D9), Color(0xFFD4956A)),
-    ('🧔', Color(0xFFD4608A), Color(0xFFC4885A)),
-    ('👧', Color(0xFF1A7AD4), Color(0xFFF0B8A0)),
-    ('🧒', Color(0xFF9B59B6), Color(0xFFF5C090)),
-    ('🧑‍🦽', Color(0xFF00A89A), Color(0xFFD4956A)),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final heroHeight = isLarge ? 250.0 : 210.0;
-
-    return Stack(
-      children: [
-        Container(
-          height: heroHeight,
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFc8e8f5), Color(0xFF88c5e0)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: isLarge ? 14 : 10,
-                runSpacing: isLarge ? 12 : 8,
-                children: _people
-                    .map((p) => _PersonAvatar(
-                          emoji: p.$1,
-                          bodyColor: p.$2,
-                          skinColor: p.$3,
-                          isLarge: isLarge,
-                        ))
-                    .toList(),
-              ),
-            ),
-          ),
-        ),
-        // Back button
-        Positioned(
-          top: 10,
-          left: 12,
-          child: _CircleIconButton(
-            icon: Icons.arrow_back,
-            onTap: () => Navigator.maybePop(context),
-          ),
-        ),
-        // Profile button — opens auth-aware bottom sheet
-        Positioned(
-          top: 10,
-          right: 12,
-          child: _CircleIconButton(
-            icon: Icons.person,
-            onTap: () => _showProfileSheet(context, teal),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-void _showProfileSheet(BuildContext context, Color teal) {
+void _showProfileSheet(BuildContext context) {
+  const teal = Color(0xFF00D9D9);
   final state = context.read<AuthBloc>().state;
   final user = state is AuthAuthenticated ? state.user : null;
 
@@ -235,15 +139,12 @@ void _showProfileSheet(BuildContext context, Color teal) {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-
-          // Avatar
           CircleAvatar(
             radius: 38,
             backgroundColor: teal.withAlpha(38),
-            child: const Icon(Icons.person, size: 42, color: Color(0xFF00D4D4)),
+            child: const Icon(Icons.person, size: 42, color: teal),
           ),
           const SizedBox(height: 12),
-
           Text(
             user?.displayName ?? 'Guest User',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
@@ -257,8 +158,6 @@ void _showProfileSheet(BuildContext context, Color teal) {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Info rows
           _ProfileRow(
             icon: Icons.email_outlined,
             label: 'Email',
@@ -268,13 +167,9 @@ void _showProfileSheet(BuildContext context, Color teal) {
           _ProfileRow(
             icon: Icons.verified_user_outlined,
             label: 'Verified',
-            value: user == null
-                ? '—'
-                : (user.emailVerified ? 'Yes' : 'Pending'),
+            value: user == null ? '—' : (user.emailVerified ? 'Yes' : 'Pending'),
           ),
           const SizedBox(height: 20),
-
-          // Action button
           if (user != null)
             SizedBox(
               width: double.infinity,
@@ -307,7 +202,7 @@ void _showProfileSheet(BuildContext context, Color teal) {
                   children: [
                     TextSpan(
                       text: 'Sign up',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: teal,
                         fontWeight: FontWeight.w800,
                         fontSize: 12,
@@ -326,11 +221,7 @@ void _showProfileSheet(BuildContext context, Color teal) {
 }
 
 class _ProfileRow extends StatelessWidget {
-  const _ProfileRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _ProfileRow({required this.icon, required this.label, required this.value});
   final IconData icon;
   final String label;
   final String value;
@@ -343,22 +234,15 @@ class _ProfileRow extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: Colors.grey.shade500),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: Colors.black87)),
           const Spacer(),
           Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-            ),
+            child: Text(value,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
           ),
         ],
       ),
@@ -366,266 +250,1253 @@ class _ProfileRow extends StatelessWidget {
   }
 }
 
-class _PersonAvatar extends StatelessWidget {
-  const _PersonAvatar({
-    required this.emoji,
-    required this.bodyColor,
-    required this.skinColor,
-    required this.isLarge,
-  });
-  final String emoji;
-  final Color bodyColor;
-  final Color skinColor;
-  final bool isLarge;
+// ─────────────────────────────────────────────
+// BLURRED CLASSROOM BACKGROUND
+// ─────────────────────────────────────────────
+class _ClassroomBackground extends StatelessWidget {
+  const _ClassroomBackground();
 
   @override
   Widget build(BuildContext context) {
-    final r = isLarge ? 20.0 : 17.0;
-    final bw = isLarge ? 32.0 : 26.0;
-    final bh = isLarge ? 34.0 : 28.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CircleAvatar(
-          radius: r,
-          backgroundColor: skinColor,
-          child: Text(emoji, style: TextStyle(fontSize: r)),
-        ),
-        Container(
-          width: bw,
-          height: bh,
-          decoration: BoxDecoration(
-            color: bodyColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(4),
-              topRight: Radius.circular(4),
+    return SizedBox.expand(
+      child: Stack(
+        children: [
+          // Base gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color(0xFFB8CFD8), Color(0xFFC5D8CC), Color(0xFFD0DDD5)],
+              ),
             ),
           ),
-        ),
-      ],
+          // Window light
+          Positioned(
+            top: -20,
+            right: -10,
+            child: Container(
+              width: 180,
+              height: 240,
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [Color(0x99FFFFD0), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          // Left silhouette body
+          Positioned(
+            bottom: 0,
+            left: -15,
+            child: _blob(120, 300, const Color(0xFF4A6A82),
+                const BorderRadius.vertical(top: Radius.circular(80))),
+          ),
+          // Left face
+          Positioned(
+            bottom: 200,
+            left: 18,
+            child: _blob(72, 80, const Color(0xFFD4956A), BorderRadius.circular(40)),
+          ),
+          // Hijab
+          Positioned(
+            bottom: 240,
+            left: 5,
+            child: _blob(105, 70, const Color(0xFF3A5E7A), BorderRadius.circular(52)),
+          ),
+          // Right silhouette body
+          Positioned(
+            bottom: 0,
+            right: -20,
+            child: _blob(110, 260, const Color(0xFF4A6A88),
+                const BorderRadius.vertical(top: Radius.circular(80))),
+          ),
+          // Right face
+          Positioned(
+            bottom: 170,
+            right: 20,
+            child: _blob(65, 75, const Color(0xFFC8855A), BorderRadius.circular(37)),
+          ),
+          // Desk
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 65,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Color(0x55967D64)],
+                ),
+              ),
+            ),
+          ),
+          // Tablet prop
+          Positioned(
+            bottom: 28,
+            left: 25,
+            child: Transform.rotate(
+              angle: -0.17,
+              child: Container(
+                width: 50,
+                height: 35,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _blob(double w, double h, Color color, BorderRadius radius) {
+    return Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.65),
+        borderRadius: radius,
+      ),
     );
   }
 }
 
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
+// ─────────────────────────────────────────────
+// INNER PHONE SHELL
+// ─────────────────────────────────────────────
+class _InnerPhone extends StatelessWidget {
+  const _InnerPhone({required this.onProfileTap});
+  final VoidCallback onProfileTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: -0.044,
+      child: Transform.translate(
+        offset: const Offset(0, -10),
+        child: Container(
+          width: 210,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.55),
+                blurRadius: 44,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(5),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: _InnerScreen(onProfileTap: onProfileTap),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// INNER SCREEN (carousel + grid)
+// ─────────────────────────────────────────────
+class _InnerScreen extends StatefulWidget {
+  const _InnerScreen({required this.onProfileTap});
+  final VoidCallback onProfileTap;
+
+  @override
+  State<_InnerScreen> createState() => _InnerScreenState();
+}
+
+class _InnerScreenState extends State<_InnerScreen> {
+  static const int _slideCount = 6;
+  final PageController _pageCtrl = PageController();
+  int _page = 0;
+  Timer? _timer;
+
+  static const _titles = [
+    'Welcome to Our\nLearning Platform!',
+    'Learn Without\nBoundaries!',
+    'Join Our\nCommunity!',
+    'Learn Your Way',
+    'Track Your Growth',
+    'Connect & Grow',
+  ];
+
+  static const _subs = [
+    'A place for everyone to grow\nand learn together.',
+    'Breaking barriers through\ninclusive digital education.',
+    '500+ learners already growing\nwith us today.',
+    'Visual, audio & motor support\nbuilt in for every learner.',
+    'Real-time progress & achievements\non every lesson you complete.',
+    'Learn from expert mentors and\ngrow with a global community.',
+  ];
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || !_pageCtrl.hasClients) return;
+      _pageCtrl.animateToPage(
+        (_page + 1) % _slideCount,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Status bar (punch-hole)
+          Container(
+            color: const Color(0xFFF5F9FC),
+            padding: const EdgeInsets.fromLTRB(10, 5, 10, 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 7, height: 7,
+                  decoration: const BoxDecoration(
+                      color: Color(0xFF111111), shape: BoxShape.circle),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: widget.onProfileTap,
+                  child: Container(
+                    width: 20, height: 20,
+                    decoration: BoxDecoration(
+                        color: Colors.grey.shade200, shape: BoxShape.circle),
+                    child: const Icon(Icons.person_outline,
+                        size: 12, color: Colors.black54),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Nav bar (back arrow + profile)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+            child: Row(
+              children: [
+                _navBtn(Icons.arrow_back_ios_new_rounded),
+              ],
+            ),
+          ),
+
+          // ── Carousel (visual only — no text inside)
+          SizedBox(
+            height: 148,
+            child: PageView(
+              controller: _pageCtrl,
+              onPageChanged: (i) {
+                setState(() => _page = i);
+                _startTimer();
+              },
+              children: const [
+                _Slide1Characters(),
+                _Slide2Mission(),
+                _Slide3Stats(),
+                _Slide4Accessibility(),
+                _Slide5Progress(),
+                _Slide6Connect(),
+              ],
+            ),
+          ),
+
+          // ── Dot indicators
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_slideCount, (i) {
+                final active = i == _page;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: active ? 14 : 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? const Color(0xFF00D9D9)
+                        : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                );
+              }),
+            ),
+          ),
+
+          // ── Title + subtitle (changes with slide)
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            child: Padding(
+              key: ValueKey(_page),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  Text(
+                    _titles[_page],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A1A2E),
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _subs[_page],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 7,
+                      color: Colors.grey.shade600,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // Feature grid
+          Padding(
+            padding: const EdgeInsets.fromLTRB(9, 0, 9, 8),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
+              children: const [
+                _GridTile(Icons.menu_book_rounded, Color(0xFF5B9EE8),
+                    Color(0xFF3A7BD5), 'Discover'),
+                _GridTile(Icons.videocam_rounded, Color(0xFF26C6DA),
+                    Color(0xFF0097A7), 'Courses'),
+                _GridTile(Icons.dashboard_customize_rounded, Color(0xFFFFC947),
+                    Color(0xFFFF8F00), 'Preferences'),
+                _GridTile(Icons.play_circle_filled_rounded, Color(0xFF81C784),
+                    Color(0xFF388E3C), 'My Skills'),
+                _GridTile(Icons.chat_bubble_rounded, Color(0xFF64B5F6),
+                    Color(0xFF1976D2), 'Mentorship'),
+                _GridTile(Icons.accessibility_new_rounded, Color(0xFFFFE57F),
+                    Color(0xFFFFAB00), 'Accessibility'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _navBtn(IconData icon) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08), blurRadius: 4)
+        ],
+      ),
+      child: Icon(icon, size: 11, color: Colors.black54),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// GRID TILE
+// ─────────────────────────────────────────────
+class _GridTile extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
+  final Color c1, c2;
+  final String label;
+  const _GridTile(this.icon, this.c1, this.c2, this.label);
+
+  void _showComingSoon(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 20),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Icon badge
+            Container(
+              width: 60, height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [c1, c2]),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: c2.withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E)),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00D9D9).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Coming Soon',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF00A0A8),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Our team is working hard to bring you this feature. Stay tuned!",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500, height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00D9D9),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  elevation: 0,
+                ),
+                child: const Text('Got it!', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _showComingSoon(context),
       child: Container(
-        width: 34,
-        height: 34,
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(216),
-          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [c1, c2],
+          ),
+          borderRadius: BorderRadius.circular(9),
+          boxShadow: [
+            BoxShadow(
+                color: c2.withValues(alpha: 0.35),
+                blurRadius: 8,
+                offset: const Offset(0, 3))
+          ],
         ),
-        child: Icon(icon, size: 18, color: Colors.black87),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 16),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 6,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _DotIndicator extends StatelessWidget {
-  const _DotIndicator({required this.teal});
-  final Color teal;
-
+// ─────────────────────────────────────────────
+// SLIDE 1 — Animated AI Characters
+// ─────────────────────────────────────────────
+class _Slide1Characters extends StatefulWidget {
+  const _Slide1Characters();
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _Dot(active: true, teal: teal),
-        const SizedBox(width: 6),
-        _Dot(active: false, teal: teal),
-        const SizedBox(width: 6),
-        _Dot(active: false, teal: teal),
-      ],
-    );
-  }
+  State<_Slide1Characters> createState() => _Slide1State();
 }
 
-class _Dot extends StatelessWidget {
-  const _Dot({required this.active, required this.teal});
-  final bool active;
-  final Color teal;
+class _Slide1State extends State<_Slide1Characters>
+    with TickerProviderStateMixin {
+  late List<AnimationController> _ctrls;
+  late List<Animation<double>> _anims;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrls = List.generate(
+        8,
+        (i) => AnimationController(
+              vsync: this,
+              duration: Duration(milliseconds: 2800 + i * 200),
+            )..repeat(reverse: true));
+    _anims = _ctrls
+        .map((c) => Tween<double>(begin: 0, end: -5)
+            .animate(CurvedAnimation(parent: c, curve: Curves.easeInOut)))
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _ctrls) { c.dispose(); }
+    super.dispose();
+  }
+
+  Widget _float(int i, Widget child) => AnimatedBuilder(
+        animation: _anims[i],
+        builder: (_, _) => Transform.translate(
+            offset: Offset(0, _anims[i].value), child: child),
+      );
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: active ? 20 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: active ? teal : Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(4),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFCCE8FF), Color(0xFFDFF0FF), Color(0xFFF0F8FF)],
+        ),
       ),
-    );
-  }
-}
-
-class _WelcomeText extends StatelessWidget {
-  const _WelcomeText({required this.isLarge});
-  final bool isLarge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
+      child: Stack(
         children: [
-          Text(
-            'Welcome to Our\nLearning Platform!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isLarge ? 20 : 17,
-              fontWeight: FontWeight.w900,
-              color: Colors.black87,
-              height: 1.3,
+          Positioned(
+            top: 4,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _float(0, _elderlyMan()),
+                const SizedBox(width: 4),
+                _float(1, _orangeGuy()),
+                const SizedBox(width: 4),
+                _float(2, _blueCenter()),
+                const SizedBox(width: 4),
+                _float(3, _purpleGuy()),
+                const SizedBox(width: 4),
+                _float(4, _pinkGirl()),
+              ],
             ),
           ),
-          SizedBox(height: isLarge ? 10 : 6),
-          Text(
-            'A place for everyone to grow and learn together.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isLarge ? 14 : 12,
-              color: Colors.grey.shade600,
+          Positioned(
+            bottom: 6,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _float(5, _wheelchairBoy()),
+                const SizedBox(width: 12),
+                _float(6, _seatedCenter()),
+                const SizedBox(width: 12),
+                _float(7, _greenGirl()),
+              ],
             ),
+          ),
+          Positioned(top: 8, left: 16, child: _sparkle(Colors.white)),
+          Positioned(top: 14, right: 20, child: _sparkle(const Color(0xFFFFE082))),
+          Positioned(top: 5, left: 90, child: _sparkle(const Color(0xFFB3E5FC))),
+        ],
+      ),
+    );
+  }
+
+  Widget _sparkle(Color color) => Container(
+        width: 5,
+        height: 5,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
+
+  Widget _head(Color c1, Color c2, Color hair, {double size = 18}) {
+    return Stack(children: [
+      Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [c1, c2]),
+              shape: BoxShape.circle)),
+      Positioned(
+          top: 0,
+          left: 2,
+          right: 2,
+          child: Container(
+              height: size * 0.35,
+              decoration: BoxDecoration(
+                  color: hair,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(size / 2))))),
+    ]);
+  }
+
+  Widget _body(Color c1, Color c2, Color book, {double w = 22, double h = 26}) {
+    return Container(
+        width: w,
+        height: h,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [c1, c2]),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(6))),
+        alignment: Alignment.bottomCenter,
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Container(
+            width: 14,
+            height: 9,
+            decoration:
+                BoxDecoration(color: book, borderRadius: BorderRadius.circular(2))));
+  }
+
+  Widget _leg(Color c, {double w = 9, double h = 11}) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+          color: c,
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3))));
+
+  Widget _charCol(List<Widget> children) =>
+      Column(mainAxisSize: MainAxisSize.min, children: children);
+
+  Widget _elderlyMan() => _charCol([
+        _head(const Color(0xFFD4A574), const Color(0xFFC08050),
+            const Color(0xFFB0B0B0)),
+        const SizedBox(height: 1),
+        _body(const Color(0xFF66BB6A), const Color(0xFF388E3C),
+            const Color(0xFFC62828)),
+        Row(children: [
+          _leg(const Color(0xFF1565C0)),
+          const SizedBox(width: 2),
+          _leg(const Color(0xFF1565C0))
+        ]),
+      ]);
+
+  Widget _orangeGuy() => _charCol([
+        _head(const Color(0xFFDBA07A), const Color(0xFFC07855),
+            const Color(0xFF3E2723)),
+        const SizedBox(height: 1),
+        _body(const Color(0xFFFFA726), const Color(0xFFE65100),
+            const Color(0xFFB71C1C),
+            w: 23, h: 28),
+        Row(children: [
+          _leg(const Color(0xFF1565C0)),
+          const SizedBox(width: 2),
+          _leg(const Color(0xFF1565C0))
+        ]),
+      ]);
+
+  Widget _blueCenter() => _charCol([
+        _head(const Color(0xFFD4A07A), const Color(0xFFB87850),
+            const Color(0xFF1A1A1A),
+            size: 23),
+        const SizedBox(height: 1),
+        Container(
+            width: 28,
+            height: 32,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF29B6F6), Color(0xFF0288D1)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(7))),
+            alignment: Alignment.bottomCenter,
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 9, height: 12, color: const Color(0xFF1565C0)),
+              Container(width: 1, color: const Color(0xFF0D47A1)),
+              Container(width: 9, height: 12, color: const Color(0xFF1565C0)),
+            ])),
+        Row(children: [
+          _leg(const Color(0xFF1A237E), w: 10, h: 12),
+          const SizedBox(width: 2),
+          _leg(const Color(0xFF1A237E), w: 10, h: 12)
+        ]),
+      ]);
+
+  Widget _purpleGuy() => _charCol([
+        _head(const Color(0xFFC8907A), const Color(0xFFA87060),
+            const Color(0xFF212121)),
+        const SizedBox(height: 1),
+        _body(const Color(0xFFCE93D8), const Color(0xFF7B1FA2),
+            const Color(0xFF4A148C),
+            w: 23, h: 28),
+        Row(children: [
+          _leg(const Color(0xFF1565C0)),
+          const SizedBox(width: 2),
+          _leg(const Color(0xFF1565C0))
+        ]),
+      ]);
+
+  Widget _pinkGirl() => _charCol([
+        _head(const Color(0xFFD4A080), const Color(0xFFB87860),
+            const Color(0xFF880E4F)),
+        const SizedBox(height: 1),
+        _body(const Color(0xFFF48FB1), const Color(0xFFC2185B),
+            const Color(0xFF880E4F),
+            w: 21, h: 25),
+        Row(children: [
+          _leg(const Color(0xFF1565C0), w: 8),
+          const SizedBox(width: 2),
+          _leg(const Color(0xFF1565C0), w: 8)
+        ]),
+      ]);
+
+  Widget _wheelchairBoy() => _charCol([
+        _head(const Color(0xFF90CAF9), const Color(0xFF1565C0),
+            const Color(0xFF1A1A2E)),
+        const SizedBox(height: 1),
+        Container(
+            width: 30,
+            height: 16,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [Color(0xFF42A5F5), Color(0xFF1565C0)]),
+                borderRadius: BorderRadius.all(Radius.circular(5))),
+            child: const Icon(Icons.accessible_forward_rounded,
+                color: Colors.white, size: 12)),
+        const SizedBox(height: 1),
+        Container(
+            width: 16,
+            height: 10,
+            decoration: BoxDecoration(
+                color: const Color(0xFFC62828),
+                borderRadius: BorderRadius.circular(2))),
+      ]);
+
+  Widget _seatedCenter() => _charCol([
+        _head(const Color(0xFFD4A07A), const Color(0xFFB87850),
+            const Color(0xFF212121)),
+        const SizedBox(height: 1),
+        Container(
+            width: 24,
+            height: 20,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [Color(0xFFF5F5F5), Color(0xFFE0E0E0)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(6))),
+            alignment: Alignment.center,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 7, height: 10, color: const Color(0xFF00796B)),
+              Container(width: 1, color: const Color(0xFF004D40)),
+              Container(width: 7, height: 10, color: const Color(0xFF00796B)),
+            ])),
+        Row(children: [
+          Transform.rotate(
+              angle: 0.26,
+              child: _leg(const Color(0xFF1565C0), w: 10, h: 8)),
+          const SizedBox(width: 1),
+          Transform.rotate(
+              angle: -0.26,
+              child: _leg(const Color(0xFF1565C0), w: 10, h: 8)),
+        ]),
+      ]);
+
+  Widget _greenGirl() => _charCol([
+        _head(const Color(0xFFD4A07A), const Color(0xFFB07050),
+            const Color(0xFF3E2723)),
+        const SizedBox(height: 1),
+        Container(
+            width: 20,
+            height: 18,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [Color(0xFF8BC34A), Color(0xFF558B2F)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(5))),
+            alignment: Alignment.center,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 5, height: 8, color: const Color(0xFFC62828)),
+              Container(width: 1, color: const Color(0xFFB71C1C)),
+              Container(width: 5, height: 8, color: const Color(0xFFC62828)),
+            ])),
+        Row(children: [
+          Transform.rotate(
+              angle: 0.17,
+              child: _leg(const Color(0xFF1565C0), w: 8, h: 8)),
+          const SizedBox(width: 1),
+          Transform.rotate(
+              angle: -0.17,
+              child: _leg(const Color(0xFF1565C0), w: 8, h: 8)),
+        ]),
+      ]);
+}
+
+// ─────────────────────────────────────────────
+// SLIDE 2 — Mission
+// ─────────────────────────────────────────────
+class _Slide2Mission extends StatelessWidget {
+  const _Slide2Mission();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56, height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [Color(0xFF66BB6A), Color(0xFF2E7D32)]),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.35),
+                    blurRadius: 14)
+              ],
+            ),
+            child: const Icon(Icons.star_rounded, color: Colors.white, size: 30),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _iconBtn(Icons.menu_book_rounded),
+              const SizedBox(width: 10),
+              _iconBtn(Icons.play_arrow_rounded),
+              const SizedBox(width: 10),
+              _iconBtn(Icons.chat_rounded),
+              const SizedBox(width: 10),
+              _iconBtn(Icons.accessibility_new_rounded),
+            ],
           ),
         ],
       ),
     );
   }
+
+  Widget _iconBtn(IconData icon) => Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 6)
+            ]),
+        child: Icon(icon, color: const Color(0xFF388E3C), size: 14),
+      );
 }
 
-class _IconGrid extends StatelessWidget {
-  const _IconGrid({required this.isLarge});
-  final bool isLarge;
-
-  static const _items = [
-    (Icons.menu_book, Color(0xFF4A90D9), 'Lessons', '/signup'),
-    (Icons.play_circle_fill, Color(0xFFE04A4A), 'Videos', ''),
-    (Icons.palette, Color(0xFF9B59B6), 'Creative', ''),
-    (Icons.movie, Color(0xFF1a5fb4), 'Movies', ''),
-    (Icons.chat_bubble, Color(0xFF00A89A), 'Chat', ''),
-    (Icons.forum, Color(0xFFF0B429), 'Forum', ''),
-  ];
+// ─────────────────────────────────────────────
+// SLIDE 3 — Stats
+// ─────────────────────────────────────────────
+class _Slide3Stats extends StatelessWidget {
+  const _Slide3Stats();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isLarge ? 24 : 16),
-      child: GridView.count(
-        crossAxisCount: 3,
-        crossAxisSpacing: isLarge ? 14 : 10,
-        mainAxisSpacing: isLarge ? 14 : 10,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: _items.map((item) {
-          return _GridCard(
-            icon: item.$1,
-            color: item.$2,
-            label: item.$3,
-            route: item.$4,
-            isLarge: isLarge,
-          );
-        }).toList(),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+        ),
       ),
-    );
-  }
-}
-
-class _GridCard extends StatelessWidget {
-  const _GridCard({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.route,
-    required this.isLarge,
-  });
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String route;
-  final bool isLarge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          final isLoggedIn =
-              context.read<AuthBloc>().state is AuthAuthenticated;
-          if (route.isNotEmpty && !isLoggedIn) {
-            Navigator.pushNamed(context, route);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('$label — coming soon!'),
-                duration: const Duration(seconds: 1),
-                behavior: SnackBarBehavior.floating,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(children: [
+            _statCard('500+', 'Learners', const Color(0xFF1565C0)),
+            const SizedBox(width: 5),
+            _statCard('120+', 'Courses', const Color(0xFF00838F)),
+            const SizedBox(width: 5),
+            _statCard('98%', 'Satisfied', const Color(0xFF2E7D32)),
+          ]),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08), blurRadius: 6)
+              ],
+            ),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Course completion rate',
+                  style:
+                      TextStyle(fontSize: 6, color: Color(0xFF555555))),
+              const SizedBox(height: 3),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: const LinearProgressIndicator(
+                  value: 0.87,
+                  minHeight: 5,
+                  backgroundColor: Color(0xFFE3F2FD),
+                  valueColor:
+                      AlwaysStoppedAnimation(Color(0xFF1565C0)),
+                ),
               ),
-            );
-          }
-        },
-        child: Container(
-          color: color,
-          child: Column(
+              const SizedBox(height: 1),
+              const Align(
+                alignment: Alignment.centerRight,
+                child: Text('87%',
+                    style: TextStyle(
+                        fontSize: 6, color: Color(0xFF1565C0))),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 6),
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: isLarge ? 34 : 28),
-              SizedBox(height: isLarge ? 8 : 5),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isLarge ? 12 : 10,
-                  fontWeight: FontWeight.w700,
+              _avatar(const Color(0xFFD4A07A)),
+              _avatar(const Color(0xFF90CAF9), offset: -8),
+              _avatar(const Color(0xFFCE93D8), offset: -8),
+              _avatar(const Color(0xFFA5D6A7), offset: -8),
+              Transform.translate(
+                offset: const Offset(-8, 0),
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Center(
+                    child: Text('+96',
+                        style: TextStyle(
+                            fontSize: 5.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1565C0))),
+                  ),
                 ),
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard(String value, String label, Color color) => Expanded(
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08), blurRadius: 6)
+            ],
+          ),
+          child: Column(children: [
+            Text(value,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: color)),
+            Text(label,
+                style: TextStyle(fontSize: 5.5, color: color)),
+          ]),
+        ),
+      );
+
+  Widget _avatar(Color color, {double offset = 0}) => Transform.translate(
+        offset: Offset(offset, 0),
+        child: Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15), blurRadius: 4)
+            ],
+          ),
+        ),
+      );
+}
+
+// ─────────────────────────────────────────────
+// SLIDE 4 — Accessibility
+// ─────────────────────────────────────────────
+class _Slide4Accessibility extends StatelessWidget {
+  const _Slide4Accessibility();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF3E5F5), Color(0xFFCE93D8)],
         ),
       ),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFF7B1FA2),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF4A148C).withValues(alpha: 0.4), blurRadius: 14),
+              ],
+            ),
+            child: const Icon(Icons.accessibility_new_rounded, color: Colors.white, size: 26),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _featureChip(Icons.closed_caption_rounded, 'Captions', const Color(0xFF7B1FA2)),
+              const SizedBox(width: 8),
+              _featureChip(Icons.contrast_rounded, 'Contrast', const Color(0xFF6A1B9A)),
+              const SizedBox(width: 8),
+              _featureChip(Icons.record_voice_over_rounded, 'Voice', const Color(0xFF4A148C)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _featureChip(IconData icon, String text, Color color) {
+    return Column(
+      children: [
+        Container(
+          width: 30, height: 30,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 6)],
+          ),
+          child: Icon(icon, size: 15, color: color),
+        ),
+        const SizedBox(height: 3),
+        Text(text, style: TextStyle(fontSize: 5.5, color: color, fontWeight: FontWeight.w600)),
+      ],
     );
   }
 }
 
-class _StartButton extends StatelessWidget {
-  const _StartButton({required this.teal});
-  final Color teal;
+// ─────────────────────────────────────────────
+// SLIDE 5 — Progress Tracking
+// ─────────────────────────────────────────────
+class _Slide5Progress extends StatelessWidget {
+  const _Slide5Progress();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => Navigator.pushNamed(context, '/signup'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: teal,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            elevation: 2,
-          ),
-          child: const Text(
-            'Start here!',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFF8E1), Color(0xFFFFCC02)],
         ),
       ),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFFFB300), Color(0xFFFF6F00)]),
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: const Color(0xFFFF6F00).withValues(alpha: 0.4), blurRadius: 14)],
+            ),
+            child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 26),
+          ),
+          const SizedBox(height: 14),
+          // Skill bars
+          _skillBar('Reading',    0.85, const Color(0xFFFF8F00)),
+          const SizedBox(height: 5),
+          _skillBar('Writing',    0.62, const Color(0xFFFFA000)),
+          const SizedBox(height: 5),
+          _skillBar('Listening',  0.74, const Color(0xFFFFB300)),
+        ],
+      ),
+    );
+  }
+
+  Widget _skillBar(String label, double value, Color color) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 38,
+          child: Text(label, style: const TextStyle(fontSize: 6, color: Color(0xFF4E2600), fontWeight: FontWeight.w600)),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 5,
+              backgroundColor: Colors.white.withValues(alpha: 0.6),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '${(value * 100).round()}%',
+          style: TextStyle(fontSize: 5.5, color: color, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// SLIDE 6 — Connect & Grow
+// ─────────────────────────────────────────────
+class _Slide6Connect extends StatelessWidget {
+  const _Slide6Connect();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE8EAF6), Color(0xFF9FA8DA)],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF3949AB), Color(0xFF1A237E)]),
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.4), blurRadius: 14)],
+            ),
+            child: const Icon(Icons.groups_rounded, color: Colors.white, size: 26),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _avatar(const Color(0xFF3949AB), Icons.person_rounded, 'Mentor'),
+              const SizedBox(width: 6),
+              Container(
+                width: 20, height: 2,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF3949AB), Color(0xFF7986CB)]),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const Icon(Icons.favorite_rounded, size: 10, color: Color(0xFFE53935)),
+              Container(
+                width: 20, height: 2,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF7986CB), Color(0xFF3949AB)]),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const SizedBox(width: 6),
+              _avatar(const Color(0xFF7986CB), Icons.school_rounded, 'You'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _avatar(Color color, IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          width: 32, height: 32,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8)],
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(height: 3),
+        Text(label, style: TextStyle(fontSize: 5.5, color: color, fontWeight: FontWeight.w700)),
+      ],
     );
   }
 }

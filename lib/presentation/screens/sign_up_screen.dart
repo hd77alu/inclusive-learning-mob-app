@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/auth_bloc.dart';
@@ -815,49 +816,92 @@ class _GoogleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF4285F4),
-        borderRadius: BorderRadius.circular(8),
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: Colors.white,
+        side: const BorderSide(color: Color(0xFFDADCE0)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
       ),
-      padding: const EdgeInsets.all(2),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: TextButton.icon(
-          onPressed: onPressed,
-          icon: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Color(0xFF4285F4),
-                  ),
-                )
-              : const Icon(
-                  Icons.g_mobiledata,
-                  size: 24,
-                  color: Color(0xFF4285F4),
-                ),
-          label: Text(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isLoading)
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Color(0xFF4285F4),
+              ),
+            )
+          else
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CustomPaint(painter: _GoogleGPainter()),
+            ),
+          const SizedBox(width: 10),
+          Flexible(child: Text(
             isLoading ? 'Connecting...' : 'Continue with Google',
             style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+              color: Color(0xFF3C4043),
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
-          ),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-        ),
+          )),
+        ],
       ),
     );
   }
+}
+
+// ── Google "G" logo painter ───────────────────────────────────────────────────
+
+class _GoogleGPainter extends CustomPainter {
+  const _GoogleGPainter();
+
+  static const _blue   = Color(0xFF4285F4);
+  static const _red    = Color(0xFFEA4335);
+  static const _yellow = Color(0xFFFBBC05);
+  static const _green  = Color(0xFF34A853);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c      = Offset(size.width / 2, size.height / 2);
+    final radius = size.width * 0.36;
+    final strokeW = size.width * 0.28;
+    const toRad  = math.pi / 180;
+
+    Paint ap(Color color) => Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeW
+      ..strokeCap = StrokeCap.butt;
+
+    final rect = Rect.fromCircle(center: c, radius: radius);
+
+    // Ring — clockwise arcs, 60° gap at upper-right (330° → 30°)
+    canvas.drawArc(rect,  30 * toRad,  60 * toRad, false, ap(_red));
+    canvas.drawArc(rect,  90 * toRad,  60 * toRad, false, ap(_yellow));
+    canvas.drawArc(rect, 150 * toRad, 120 * toRad, false, ap(_green));
+    canvas.drawArc(rect, 270 * toRad,  60 * toRad, false, ap(_blue));
+
+    // Blue crossbar — horizontal bar at centre-height, from centre to right edge
+    final barH = strokeW / 2;
+    canvas.drawRect(
+      Rect.fromLTRB(
+        c.dx,
+        c.dy - barH,
+        c.dx + radius + strokeW / 2,
+        c.dy + barH,
+      ),
+      Paint()..color = _blue,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_) => false;
 }
