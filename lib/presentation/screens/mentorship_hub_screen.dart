@@ -1,47 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'mentor_profile_screen.dart';
 import '../../blocs/mentorship_bloc.dart';
-import '../../data/services/firestore_service.dart';
-import '../widgets/mentor_card.dart';
+import '../../services/firestore_service.dart';
+import '../../models/mentor_model.dart';
 
-class MentorshipHubScreen extends StatelessWidget {
+class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => Navigator.pushReplacementNamed(context, '/signup'),
-      );
-      return const SizedBox.shrink();
-    }
-
-    return BlocProvider(
-      create: (_) =>
-          MentorshipBloc(FirestoreService(), user.uid)..add(LoadMentors()),
-      child: const _MentorshipHubView(),
-    );
-  }
+  State<MentorshipHubScreen> createState() => _MentorshipHubScreenState();
 }
 
-class _MentorshipHubView extends StatefulWidget {
-  const _MentorshipHubView();
+class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
+  static const Color _teal = Color(0xFF00D4D4);
+
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'All';
+  final List<String> _filters = ['All', 'Sign Language', 'Braille'];
 
   @override
-  State<_MentorshipHubView> createState() => _MentorshipHubViewState();
-}
-
-class _MentorshipHubViewState extends State<_MentorshipHubView> {
-  static const _bg = Color(0xFF0D1B1E);
-  static const _cyan = Color(0xFF1AFFFF);
-  static const _headerColor = Color(0xFF1AFFFF);
-  static const _searchBg = Color(0xFF1A2426);
-  static const _filters = ['All', 'Sign Language', 'Braille'];
-
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
+  void initState() {
+    super.initState();
+    // Auth guard — redirect only if truly not signed in
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (FirebaseAuth.instance.currentUser == null) {
+        Navigator.pushReplacementNamed(context, '/signup');
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -49,197 +37,78 @@ class _MentorshipHubViewState extends State<_MentorshipHubView> {
     super.dispose();
   }
 
+  List<Mentor> _filtered(List<Mentor> mentors) {
+    final query = _searchController.text.toLowerCase();
+    return mentors.where((m) {
+      final matchesSearch = query.isEmpty ||
+          m.name.toLowerCase().contains(query) ||
+          m.role.toLowerCase().contains(query);
+      final matchesFilter = _selectedFilter == 'All' ||
+          m.tags.any(
+              (t) => t.toLowerCase().contains(_selectedFilter.toLowerCase()));
+      return matchesSearch && matchesFilter;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser!;
-
-    return BlocListener<MentorshipBloc, MentorshipState>(
-      listenWhen: (prev, curr) =>
-          curr is MentorshipLoaded &&
-          prev is MentorshipLoaded &&
-          prev.bookmarkedIds != curr.bookmarkedIds,
-      listener: (context, state) {
-        if (state is MentorshipLoaded) {
-          // SnackBar is triggered from MentorCard via bookmark toggle
-        }
-      },
+    return BlocProvider(
+      create: (_) => MentorshipBloc(FirestoreService())..add(LoadMentors()),
       child: Scaffold(
-        backgroundColor: _bg,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                child: _buildSearchBar(),
-              ),
-              BlocBuilder<MentorshipBloc, MentorshipState>(
-                buildWhen: (prev, curr) => curr is MentorshipLoaded,
-                builder: (context, state) {
-                  final selected =
-                      state is MentorshipLoaded ? state.selectedFilter : 'All';
-                  return SizedBox(
-                    height: 52,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      itemCount: _filters.length,
-                      separatorBuilder: (context, i) =>
-                          const SizedBox(width: 8),
-                      itemBuilder: (context, i) => _FilterChip(
-                        label: _filters[i],
-                        isSelected: selected == _filters[i],
-                        onTap: () => context
-                            .read<MentorshipBloc>()
-                            .add(FilterMentors(_filters[i])),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              Expanded(
-                child: BlocBuilder<MentorshipBloc, MentorshipState>(
-                  builder: (context, state) {
-                    if (state is MentorshipLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: _cyan),
-                      );
-                    }
-
-                    if (state is MentorshipError) {
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.wifi_off_rounded,
-                                color: Color(0xFF8EADB3), size: 48),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Something went wrong.\n${state.message}',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: Colors.redAccent.shade100,
-                                  fontSize: 13),
-                            ),
-                            const SizedBox(height: 16),
-                            TextButton(
-                              onPressed: () => context
-                                  .read<MentorshipBloc>()
-                                  .add(LoadMentors()),
-                              child: const Text('Retry',
-                                  style: TextStyle(color: _cyan)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    if (state is MentorshipLoaded) {
-                      final q = _searchQuery.toLowerCase();
-                      final mentors = q.isEmpty
-                          ? state.mentors
-                          : state.mentors
-                              .where((m) =>
-                                  m.name.toLowerCase().contains(q) ||
-                                  m.specialty.toLowerCase().contains(q) ||
-                                  m.tags.any((t) =>
-                                      t.toLowerCase().contains(q)))
-                              .toList();
-
-                      if (mentors.isEmpty) {
-                        return const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.search_off_rounded,
-                                  color: Color(0xFF8EADB3), size: 48),
-                              SizedBox(height: 12),
-                              Text(
-                                'No mentors found.',
-                                style: TextStyle(
-                                    color: Color(0xFF8EADB3), fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                        itemCount: mentors.length,
-                        separatorBuilder: (context, i) =>
-                            const SizedBox(height: 16),
-                        itemBuilder: (context, i) => MentorCard(
-                          mentor: mentors[i],
-                          isBookmarked:
-                              state.bookmarkedIds.contains(mentors[i].id),
-                          userId: user.uid,
-                        ),
-                      );
-                    }
-
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
-          ),
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: Column(
+          children: [
+            _buildHeader(context),
+            _buildSearchBar(),
+            _buildFilterChips(),
+            Expanded(child: _buildMentorList()),
+          ],
         ),
       ),
     );
   }
 
+  // Teal header with back arrow, title, profile icon
   Widget _buildHeader(BuildContext context) {
     return Container(
-      width: double.infinity,
-      color: _headerColor,
-      padding: const EdgeInsets.fromLTRB(8, 12, 16, 12),
+      color: _teal,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        bottom: 12,
+        left: 4,
+        right: 4,
+      ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.black, size: 20),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.maybePop(context),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
-          const SizedBox(width: 8),
           const Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Inclusive Learning Platform',
                   style: TextStyle(
-                    color: Colors.black54,
                     fontSize: 11,
-                    letterSpacing: 0.2,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
                   ),
                 ),
-                SizedBox(height: 1),
                 Text(
                   'Mentorship Hub',
                   style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
                     color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black26, width: 1.5),
-              color: Colors.black12,
-            ),
-            child: const Icon(Icons.person_rounded,
-                color: Colors.black, size: 22),
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.black),
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
           ),
         ],
       ),
@@ -247,76 +116,546 @@ class _MentorshipHubViewState extends State<_MentorshipHubView> {
   }
 
   Widget _buildSearchBar() {
-    return TextField(
-      controller: _searchController,
-      onChanged: (v) => setState(() => _searchQuery = v),
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: 'Search mentors by specialty...',
-        hintStyle: const TextStyle(color: Color(0xFF6A8A90), fontSize: 14),
-        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6A8A90)),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close_rounded,
-                    color: Color(0xFF6A8A90), size: 18),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() => _searchQuery = '');
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: _searchBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() {}),
+        decoration: InputDecoration(
+          hintText: 'Search mentors by specialty...',
+          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: _cyan, width: 1.2),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _filters.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final selected = _filters[i] == _selectedFilter;
+          return ChoiceChip(
+            label: Text(_filters[i]),
+            selected: selected,
+            onSelected: (value) =>
+                setState(() => _selectedFilter = _filters[i]),
+            selectedColor: _teal,
+            backgroundColor: Colors.white,
+            labelStyle: TextStyle(
+              color: selected ? Colors.black : Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: selected ? _teal : Colors.grey.shade300,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMentorList() {
+    return BlocConsumer<MentorshipBloc, MentorshipState>(
+      listener: (context, state) {
+        if (state is MentorshipError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to load mentors. Please try again.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state is MentorshipLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF00D4D4)),
+          );
+        }
+
+        if (state is MentorshipLoaded) {
+          final mentors = _filtered(state.mentors);
+
+          if (mentors.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          // Responsive: grid on wide screens, list on narrow
+          final isWide = MediaQuery.of(context).size.width >= 600;
+
+          if (isWide) {
+            return GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.78,
+              ),
+              itemCount: mentors.length,
+              itemBuilder: (context, index) => _AnimatedMentorCard(
+                mentor: mentors[index],
+                isBookmarked:
+                    state.bookmarkedIds.contains(mentors[index].id),
+                index: index,
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+            itemCount: mentors.length,
+            itemBuilder: (context, index) => _AnimatedMentorCard(
+              mentor: mentors[index],
+              isBookmarked: state.bookmarkedIds.contains(mentors[index].id),
+              index: index,
+            ),
+          );
+        }
+
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people_outline, size: 72, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            'No mentors available yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Check back soon!',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Animated card wrapper — slides + fades in staggered
+class _AnimatedMentorCard extends StatefulWidget {
+  final Mentor mentor;
+  final bool isBookmarked;
+  final int index;
+
+  const _AnimatedMentorCard({
+    required this.mentor,
+    required this.isBookmarked,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedMentorCard> createState() => _AnimatedMentorCardState();
+}
+
+class _AnimatedMentorCardState extends State<_AnimatedMentorCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<Offset> _slideAnim;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+
+    // Stagger by index
+    Future.delayed(Duration(milliseconds: widget.index * 80), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: _MentorCard(
+          mentor: widget.mentor,
+          isBookmarked: widget.isBookmarked,
         ),
       ),
     );
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
+// Mentor card
+class _MentorCard extends StatelessWidget {
+  final Mentor mentor;
+  final bool isBookmarked;
 
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _MentorCard({required this.mentor, required this.isBookmarked});
 
-  static const _cyan = Color(0xFF1AFFFF);
-  static const _cardBg = Color(0xFF1A2426);
+  static const Color _teal = Color(0xFF00D4D4);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? _cyan : _cardBg,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isSelected ? _cyan : const Color(0xFF2E4A50),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MentorProfileScreen(mentor: mentor),
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.black : const Color(0xFF8EADB3),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 13,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar banner with ONLINE badge
+            Stack(
+              children: [
+                Container(
+                  height: 100,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _teal.withValues(alpha: 0.15),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: const Center(
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Color(0xFF00D4D4),
+                      child:
+                          Icon(Icons.person, size: 40, color: Colors.white),
+                    ),
+                  ),
+                ),
+                if (mentor.isOnline)
+                  Positioned(
+                    top: 10,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.circle, size: 7, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text(
+                            'ONLINE NOW',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name + rating
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          mentor.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '⭐ ${mentor.rating}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    mentor.role,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+
+                  if (mentor.description.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      mentor.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+
+                  if (mentor.tags.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: mentor.tags
+                          .map(
+                            (tag) => Chip(
+                              label: Text(tag),
+                              labelStyle: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              backgroundColor: _teal.withValues(alpha: 0.12),
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              side: BorderSide.none,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+
+                  const SizedBox(height: 10),
+                  const Divider(height: 1),
+                  const SizedBox(height: 6),
+
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // Bookmark — connected to BLoC
+                      _BookmarkButton(
+                          mentor: mentor, isBookmarked: isBookmarked),
+                      _actionButton(
+                        context: context,
+                        icon: Icons.call,
+                        label: 'Call',
+                        onTap: () => _confirmAction(
+                          context,
+                          title: 'Call Mentor',
+                          message: 'Do you want to call ${mentor.name}?',
+                        ),
+                      ),
+                      _actionButton(
+                        context: context,
+                        icon: Icons.videocam,
+                        label: 'Video',
+                        onTap: () => _confirmAction(
+                          context,
+                          title: 'Video Session',
+                          message:
+                              'Start a video session with ${mentor.name}?',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmAction(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$title request sent!'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _teal,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: _teal.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 15, color: _teal),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF00D4D4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Bookmark button — reads and writes to BLoC
+class _BookmarkButton extends StatelessWidget {
+  final Mentor mentor;
+  final bool isBookmarked;
+
+  const _BookmarkButton({required this.mentor, required this.isBookmarked});
+
+  static const Color _teal = Color(0xFF00D4D4);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        context.read<MentorshipBloc>().add(
+              ToggleBookmark(mentor.id, isCurrentlyBookmarked: isBookmarked),
+            );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isBookmarked ? 'Bookmark removed' : 'Mentor saved!',
+            ),
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isBookmarked
+              ? _teal.withValues(alpha: 0.25)
+              : _teal.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              size: 15,
+              color: _teal,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isBookmarked ? 'Saved' : 'Save',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF00D4D4),
+              ),
+            ),
+          ],
         ),
       ),
     );
