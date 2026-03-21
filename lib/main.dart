@@ -3,14 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'blocs/auth_bloc.dart';
-
-// ── Jongkuch: App Outlook + Auth screens ─────────────────────────────────────
 import 'presentation/screens/app_outlook_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
 import 'presentation/screens/forgot_password_screen.dart';
 import 'presentation/screens/verify_email_screen.dart';
-
-// ── Other team members' screens ───────────────────────────────────────────────
 import 'presentation/screens/course_completion_screen.dart';
 import 'presentation/screens/mentorship_hub_screen.dart';
 import 'presentation/screens/profile_screen.dart';
@@ -43,14 +39,11 @@ class MainApp extends StatelessWidget {
         routes: {
           // _AuthGate checks persisted auth state and routes automatically.
           '/': (context) => const _AuthGate(),
-
-          // ── Jongkuch: App Outlook + Auth ──────────────────────────────────
+          // Authenticated routes:
           '/outlook': (context) => const OutlookScreen(),
           '/signup': (context) => const SignUpScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/verify-email': (context) => const VerifyEmailScreen(),
-
-          // ── Other team members' routes ────────────────────────────────────
           '/course-completion': (context) => const CourseCompletionScreen(),
           '/mentorship-hub': (context) => const MentorshipHubScreen(),
           '/profile': (context) => const ProfileScreen(),
@@ -79,7 +72,7 @@ class _AuthGate extends StatelessWidget {
           return const _SplashScreen();
         }
         if (state is AuthAuthenticated) {
-          return const OutlookScreen();
+          return const DiscoverScreen();
         }
         if (state is AuthEmailVerificationRequired ||
             state is AuthEmailVerificationSent) {

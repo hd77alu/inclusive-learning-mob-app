@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/accessibility_bloc.dart';
-import '../../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 
 class AccessibilitySetupScreen extends StatelessWidget {
   const AccessibilitySetupScreen({super.key});

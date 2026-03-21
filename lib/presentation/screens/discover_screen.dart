@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../blocs/discover_bloc.dart';
-import '../../models/course_model.dart';
-import '../../models/course_progress_model.dart';
-import '../../services/firestore_service.dart';
+import '../../data/models/course_model.dart';
+import '../../data/models/course_progress_model.dart';
+import '../../data/services/firestore_service.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});

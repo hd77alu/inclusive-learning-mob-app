@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/mentor_model.dart';
-import '../services/firestore_service.dart';
+import '../data/models/mentor_model.dart';
+import '../data/services/firestore_service.dart';
 
 // ── Events ──
 abstract class MentorshipEvent {}

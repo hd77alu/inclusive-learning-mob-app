@@ -6,7 +6,7 @@ import '../../data/models/mentor_model.dart';
 import '../screens/mentor_profile_edit_screen.dart';
 
 class MentorCard extends StatelessWidget {
-  final MentorModel mentor;
+  final Mentor mentor;
   final bool isBookmarked;
   final String userId;
 
@@ -23,7 +23,10 @@ class MentorCard extends StatelessWidget {
   void _onBookmark(BuildContext context) {
     context
         .read<MentorshipBloc>()
-        .add(ToggleBookmark(userId, mentor.id, isBookmarked: isBookmarked));
+        .add(ToggleBookmark(
+          mentor.id,
+          isCurrentlyBookmarked: isBookmarked,
+        ));
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -228,7 +231,7 @@ class MentorCard extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            mentor.specialty,
+            mentor.role,
             style: const TextStyle(color: _cyan, fontSize: 13),
           ),
           const SizedBox(height: 8),

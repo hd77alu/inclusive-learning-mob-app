@@ -6,7 +6,7 @@ import '../../data/models/mentor_model.dart';
 import '../../data/services/firestore_service.dart';
 
 class MentorProfileEditScreen extends StatefulWidget {
-  final MentorModel mentor;
+  final Mentor mentor;
 
   const MentorProfileEditScreen({super.key, required this.mentor});
 
@@ -224,7 +224,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.mentor.specialty,
+                    widget.mentor.role,
                     style: const TextStyle(color: _cyan, fontSize: 14),
                   ),
                   const SizedBox(height: 8),

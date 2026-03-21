@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'mentor_profile_screen.dart';
 import '../../blocs/mentorship_bloc.dart';
-import '../../services/firestore_service.dart';
-import '../../models/mentor_model.dart';
+import '../../data/services/firestore_service.dart';
+import '../../data/models/mentor_model.dart';
 
 class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});

@@ -90,12 +90,13 @@ class AuthEmailVerificationSent extends AuthState {
 /// UI layers only dispatch [AuthEvent]s and react to [AuthState]s.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth;
-  final GoogleSignIn _googleSignIn;
+  final GoogleSignIn? _googleSignIn;
 
   AuthBloc({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
       : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn =
-            googleSignIn ?? GoogleSignIn(scopes: ['email', 'profile']),
+      _googleSignIn = kIsWeb
+        ? null
+        : (googleSignIn ?? GoogleSignIn(scopes: ['email', 'profile'])),
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignUpWithEmail>(_onSignUpWithEmail);
@@ -184,7 +185,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         result = await _auth.signInWithPopup(provider);
       } else {
         // Mobile: use the google_sign_in package.
-        final account = await _googleSignIn.signIn();
+        final googleSignIn = _googleSignIn;
+        if (googleSignIn == null) {
+          emit(AuthError('Google Sign-In is not configured on this platform.'));
+          return;
+        }
+        final account = await googleSignIn.signIn();
         if (account == null) {
           emit(AuthUnauthenticated());
           return;
@@ -209,7 +215,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      await _googleSignIn.signOut();
+      if (!kIsWeb && _googleSignIn != null) {
+        await _googleSignIn.signOut();
+      }
     } catch (_) {
       // Google sign-out is best-effort.
     }
