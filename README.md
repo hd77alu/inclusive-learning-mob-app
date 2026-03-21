@@ -7,11 +7,11 @@ Persons with Disabilities in Rwanda.
 
 architecture and key folders:
 
-```
+```plaintext
 lib/
 ├── main.dart              # Application entry point
 ├── firebase_options.dart          # Firebase configuration
-├── blocs/                  # State management (BLoC pattern)
+├── bloc/                  # State management (BLoC pattern)
 ├── data/                  # Data layer
 │   ├── models/           # Data models and entities
 │   ├── services/         # API and Firebase services
@@ -27,16 +27,21 @@ lib/
 ### Before Starting Work
 
 1. **Always sync with the main branch**
+
    ```bash
    git pull origin main
    ```
+
    This ensures you have the latest changes before starting your work.
 
 2. **Create a new branch for each feature or bug fix**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
+
    or
+
    ```bash
    git checkout -b fix/bug-description
    ```
@@ -53,6 +58,7 @@ lib/
 Write clear and meaningful commit messages that describe what changes were made and why, One giant “final” commit isn't acceptable.
 
 **Format:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -62,6 +68,7 @@ Write clear and meaningful commit messages that describe what changes were made 
 - `chore`: Maintenance tasks, dependency updates
 
 **Examples:**
+
 ```bash
 git commit -m "feat: implement user authentication with Firebase"
 git commit -m "fix: resolve null pointer exception in profile screen"
