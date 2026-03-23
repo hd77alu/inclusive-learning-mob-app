@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/mentor_model.dart';
+import '../../data/models/mentor_model.dart';
 
 class MentorProfileScreen extends StatelessWidget {
   final Mentor mentor;

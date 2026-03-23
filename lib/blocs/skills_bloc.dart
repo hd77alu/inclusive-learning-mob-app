@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/skill_model.dart';
-import '../services/firestore_service.dart';
+import '../data/models/skill_model.dart';
+import '../data/services/firestore_service.dart';
 
 abstract class SkillsEvent {}
 

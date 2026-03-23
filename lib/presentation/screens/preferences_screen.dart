@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../blocs/theme_bloc.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -9,9 +11,9 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  bool _darkMode = false;
   bool _notifications = true;
   String _language = 'English';
+  bool? _localDarkMode;
 
   @override
   void initState() {
@@ -22,70 +24,80 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _darkMode = prefs.getBool('darkMode') ?? false;
       _notifications = prefs.getBool('notifications') ?? true;
       _language = prefs.getString('language') ?? 'English';
     });
   }
 
-  Future<void> _saveDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', value);
-    setState(() => _darkMode = value);
-  }
-
   Future<void> _saveNotifications(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications', value);
-    setState(() => _notifications = value);
+    final success = await prefs.setBool('notifications', value);
+    if (mounted && success) {
+      setState(() => _notifications = value);
+    }
   }
 
   Future<void> _saveLanguage(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', value);
-    setState(() => _language = value);
+    final success = await prefs.setString('language', value);
+    if (mounted && success) {
+      setState(() => _language = value);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = context.select((ThemeBloc bloc) => bloc.state.isDarkMode);
+    final textColor = isDarkMode ? Colors.white : null;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Preferences'),
+        title: Text('Preferences', style: TextStyle(color: textColor)),
+        backgroundColor: isDarkMode ? const Color(0xFF112324) : null,
+        iconTheme: isDarkMode ? const IconThemeData(color: Colors.white) : null,
       ),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Enable dark theme'),
-            value: _darkMode,
-            onChanged: _saveDarkMode,
-            secondary: const Icon(Icons.dark_mode),
-          ),
-          SwitchListTile(
-            title: const Text('Notifications'),
-            subtitle: const Text('Enable push notifications'),
-            value: _notifications,
-            onChanged: _saveNotifications,
-            secondary: const Icon(Icons.notifications),
-          ),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Language'),
-            subtitle: Text(_language),
-            trailing: DropdownButton<String>(
-              value: _language,
-              items: const [
-                DropdownMenuItem(value: 'English', child: Text('English')),
-                DropdownMenuItem(value: 'French', child: Text('French')),
-                DropdownMenuItem(value: 'Kinyarwanda', child: Text('Kinyarwanda')),
-              ],
+      body: Container(
+        color: isDarkMode ? const Color(0xFF112324) : null,
+        child: ListView(
+          children: [
+            SwitchListTile(
+              title: Text('Dark Mode', style: TextStyle(color: textColor)),
+              subtitle: Text('Enable dark theme', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+              value: _localDarkMode ?? isDarkMode,
               onChanged: (value) {
-                if (value != null) _saveLanguage(value);
+                setState(() => _localDarkMode = value);
+                context.read<ThemeBloc>().add(ToggleTheme(value));
               },
+              secondary: Icon(Icons.dark_mode, color: textColor),
+            ),
+            SwitchListTile(
+              title: Text('Notifications', style: TextStyle(color: textColor)),
+              subtitle: Text('Enable push notifications', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+              value: _notifications,
+              onChanged: _saveNotifications,
+              secondary: Icon(Icons.notifications, color: textColor),
+            ),
+            ListTile(
+              leading: Icon(Icons.language, color: textColor),
+              title: Text('Language', style: TextStyle(color: textColor)),
+              subtitle: Text(_language, style: TextStyle(color: textColor)),
+                  trailing: DropdownButton<String>(
+                    value: _language,
+                    dropdownColor: isDarkMode ? const Color(0xFF112324) : null,
+                style: TextStyle(color: textColor),
+                items: const [
+                  DropdownMenuItem(value: 'English', child: Text('English')),
+                  DropdownMenuItem(value: 'French', child: Text('French')),
+                  DropdownMenuItem(value: 'Kinyarwanda', child: Text('Kinyarwanda')),
+                ],
+                    onChanged: (value) {
+                      if (value != null) _saveLanguage(value);
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        );
   }
 }

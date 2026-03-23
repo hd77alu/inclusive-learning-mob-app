@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../blocs/discover_bloc.dart';
-import '../../models/course_model.dart';
-import '../../models/course_progress_model.dart';
-import '../../services/firestore_service.dart';
+import '../../data/models/course_model.dart';
+import '../../data/models/course_progress_model.dart';
+import '../../data/services/firestore_service.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -54,6 +54,9 @@ class _DiscoverViewState extends State<_DiscoverView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D1B1E) : const Color(0xFFF5F5F5);
+    
     return BlocListener<DiscoverBloc, DiscoverState>(
       listener: (context, state) {
         if (state is DiscoverError) {
@@ -70,7 +73,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: bgColor,
         body: Column(
           children: [
             _buildHeader(context),
@@ -172,7 +175,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
               final isSelected = _categories[i] == selected;
               return ChoiceChip(

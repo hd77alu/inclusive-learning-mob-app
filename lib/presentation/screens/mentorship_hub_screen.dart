@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'mentor_profile_screen.dart';
 import '../../blocs/mentorship_bloc.dart';
-import '../../services/firestore_service.dart';
-import '../../models/mentor_model.dart';
+import '../../data/services/firestore_service.dart';
+import '../../data/models/mentor_model.dart';
 
 class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});
@@ -52,10 +52,13 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D1B1E) : const Color(0xFFF5F5F5);
+
     return BlocProvider(
       create: (_) => MentorshipBloc(FirestoreService())..add(LoadMentors()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: bgColor,
         body: Column(
           children: [
             _buildHeader(context),

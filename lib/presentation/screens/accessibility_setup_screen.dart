@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/accessibility_bloc.dart';
-import '../../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 
 class AccessibilitySetupScreen extends StatelessWidget {
   const AccessibilitySetupScreen({super.key});
@@ -29,6 +29,8 @@ class _AccessibilitySetupView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D1B1E) : Colors.white;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacementNamed(context, '/signup');
@@ -55,7 +57,7 @@ class _AccessibilitySetupView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         body: Column(children: [
           Container(
             width: double.infinity,
@@ -110,7 +112,7 @@ class _AccessibilitySetupView extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8, bottom: 4),
       child: Row(children: [
         IconButton(
-          icon: const Icon(Icons.chevron_left, color: Colors.black87, size: 26),
+          icon: const Icon(Icons.chevron_left, size: 26),
           onPressed: () => Navigator.maybePop(context),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -118,7 +120,7 @@ class _AccessibilitySetupView extends StatelessWidget {
         const Expanded(
           child: Text('Accessibility Setup',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.black87)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
         ),
         const SizedBox(width: 32),
       ]),
