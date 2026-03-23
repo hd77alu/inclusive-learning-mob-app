@@ -41,7 +41,7 @@ class _AccessibilitySetupView extends StatelessWidget {
       listener: (context, state) {
         if (state is AccessibilitySaved) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Accessibility preference saved!'),
+            content: const Text('Accessibility preference saved!'),
             backgroundColor: teal,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

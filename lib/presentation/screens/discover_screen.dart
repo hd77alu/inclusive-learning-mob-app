@@ -56,7 +56,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF0D1B1E) : const Color(0xFFF5F5F5);
-    
+
     return BlocListener<DiscoverBloc, DiscoverState>(
       listener: (context, state) {
         if (state is DiscoverError) {
@@ -166,24 +166,23 @@ class _DiscoverViewState extends State<_DiscoverView> {
   Widget _buildCategoryChips(BuildContext context) {
     return BlocBuilder<DiscoverBloc, DiscoverState>(
       builder: (context, state) {
-        final selected = state is DiscoverLoaded
-            ? state.selectedCategory
-            : 'All';
+        final selected =
+            state is DiscoverLoaded ? state.selectedCategory : 'All';
         return SizedBox(
           height: 44,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
               final isSelected = _categories[i] == selected;
               return ChoiceChip(
                 label: Text(_categories[i]),
                 selected: isSelected,
                 onSelected: (_) => context.read<DiscoverBloc>().add(
-                  FilterCourses(_categories[i]),
-                ),
+                      FilterCourses(_categories[i]),
+                    ),
                 selectedColor: teal,
                 backgroundColor: Colors.white,
                 labelStyle: TextStyle(
@@ -351,7 +350,6 @@ class _CourseCard extends StatelessWidget {
     }
   }
 
-  // ── Share course via native share sheet ──
   void _shareCourse(BuildContext context) {
     Share.share(
       'Check out this course on Inclusive Learning Platform!\n\n'
@@ -523,13 +521,13 @@ class _CourseCard extends StatelessWidget {
                         icon: hasStarted
                             ? Icons.play_circle_fill
                             : isCompleted
-                            ? Icons.replay
-                            : Icons.play_arrow,
+                                ? Icons.replay
+                                : Icons.play_arrow,
                         label: hasStarted
                             ? 'Continue'
                             : isCompleted
-                            ? 'Replay'
-                            : 'Start',
+                                ? 'Replay'
+                                : 'Start',
                         onTap: () => _showCourseDialog(context, progressVal),
                       ),
                       _BookmarkButton(
@@ -682,6 +680,7 @@ class _ProgressSlider extends StatefulWidget {
 class _ProgressSliderState extends State<_ProgressSlider> {
   static const Color teal = Color(0xFF00D4D4);
   late double _val;
+
   @override
   void initState() {
     super.initState();
@@ -708,9 +707,7 @@ class _ProgressSliderState extends State<_ProgressSlider> {
             label: '${(_val * 100).round()}%',
             onChanged: (v) => setState(() => _val = v),
             onChangeEnd: (v) {
-              context.read<DiscoverBloc>().add(
-                UpdateProgress(widget.courseId, v),
-              );
+              context.read<DiscoverBloc>().add(UpdateProgress(widget.courseId, v));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Progress updated to ${(v * 100).round()}%'),
@@ -745,8 +742,8 @@ class _BookmarkButton extends StatelessWidget {
     return InkWell(
       onTap: () {
         context.read<DiscoverBloc>().add(
-          ToggleCourseBookmark(course.id, isCurrentlyBookmarked: isBookmarked),
-        );
+              ToggleCourseBookmark(course.id, isCurrentlyBookmarked: isBookmarked),
+            );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isBookmarked ? 'Bookmark removed' : 'Course saved!'),

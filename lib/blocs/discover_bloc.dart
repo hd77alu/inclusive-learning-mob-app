@@ -3,7 +3,6 @@ import '../data/models/course_model.dart';
 import '../data/models/course_progress_model.dart';
 import '../data/services/firestore_service.dart';
 
-// ── Events ────────────────────────────────────────────────────────────────
 abstract class DiscoverEvent {}
 
 class LoadCourses extends DiscoverEvent {}
@@ -30,7 +29,6 @@ class SearchCourses extends DiscoverEvent {
   SearchCourses(this.query);
 }
 
-// ── States ────────────────────────────────────────────────────────────────
 abstract class DiscoverState {}
 
 class DiscoverInitial extends DiscoverState {}
@@ -74,7 +72,6 @@ class DiscoverError extends DiscoverState {
   DiscoverError(this.message);
 }
 
-// ── BLoC ──────────────────────────────────────────────────────────────────
 class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
   final FirestoreService firestoreService;
 
@@ -91,14 +88,13 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
     try {
       final courses = await firestoreService.getCourses();
       final progress = await firestoreService.getUserCourseProgress();
-      final loaded = DiscoverLoaded(
+      emit(DiscoverLoaded(
         allCourses: courses,
         filteredCourses: courses,
         progressMap: progress,
         selectedCategory: 'All',
         searchQuery: '',
-      );
-      emit(loaded);
+      ));
     } catch (e) {
       emit(DiscoverError('Failed to load courses: $e'));
     }
@@ -107,8 +103,6 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
   Future<void> _onToggleBookmark(ToggleCourseBookmark event, Emitter<DiscoverState> emit) async {
     final current = state;
     if (current is! DiscoverLoaded) return;
-
-    // Optimistic update
     final updatedMap = Map<String, CourseProgress>.from(current.progressMap);
     final existing = updatedMap[event.courseId];
     if (existing != null) {
@@ -122,11 +116,9 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
       );
     }
     emit(current.copyWith(progressMap: updatedMap));
-
     try {
       await firestoreService.toggleCourseBookmark(event.courseId, event.isCurrentlyBookmarked);
     } catch (e) {
-      // Revert
       emit(current);
       emit(DiscoverError('Failed to update bookmark'));
     }
@@ -135,7 +127,6 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
   Future<void> _onUpdateProgress(UpdateProgress event, Emitter<DiscoverState> emit) async {
     final current = state;
     if (current is! DiscoverLoaded) return;
-
     final updatedMap = Map<String, CourseProgress>.from(current.progressMap);
     final existing = updatedMap[event.courseId];
     final newProgress = CourseProgress(
@@ -146,7 +137,6 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
     );
     updatedMap[event.courseId] = newProgress;
     emit(current.copyWith(progressMap: updatedMap));
-
     try {
       await firestoreService.updateCourseProgress(newProgress);
     } catch (_) {
@@ -157,22 +147,14 @@ class DiscoverBloc extends Bloc<DiscoverEvent, DiscoverState> {
   void _onFilter(FilterCourses event, Emitter<DiscoverState> emit) {
     final current = state;
     if (current is! DiscoverLoaded) return;
-    final filtered = _applyFilters(
-      current.allCourses,
-      event.category,
-      current.searchQuery,
-    );
+    final filtered = _applyFilters(current.allCourses, event.category, current.searchQuery);
     emit(current.copyWith(filteredCourses: filtered, selectedCategory: event.category));
   }
 
   void _onSearch(SearchCourses event, Emitter<DiscoverState> emit) {
     final current = state;
     if (current is! DiscoverLoaded) return;
-    final filtered = _applyFilters(
-      current.allCourses,
-      current.selectedCategory,
-      event.query,
-    );
+    final filtered = _applyFilters(current.allCourses, current.selectedCategory, event.query);
     emit(current.copyWith(filteredCourses: filtered, searchQuery: event.query));
   }
 
