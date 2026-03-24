@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'preferences_screen.dart';
+import '../skills/my_skills_screen.dart';
+import '../course/discover_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -107,13 +109,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                           icon: Icons.star_outline_rounded,
                           label: 'My Skills',
                           subtitle: 'View and manage your skill portfolio',
-                          onTap: () => Navigator.pushNamed(context, '/skills'),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MySkillsScreen(),
+                            ),
+                          ),
                         ),
                         _MenuItem(
                           icon: Icons.school_outlined,
                           label: 'My Courses',
                           subtitle: 'Browse your enrolled courses',
-                          onTap: () => Navigator.pushNamed(context, '/discover'),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DiscoverScreen(),
+                            ),
+                          ),
                         ),
                       ]),
                       const SizedBox(height: 24),
