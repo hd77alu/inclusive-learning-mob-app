@@ -5,6 +5,7 @@ import '../models/skill_model.dart';
 import '../models/course_model.dart';
 import '../models/course_progress_model.dart';
 import '../models/accessibility_model.dart';
+import '../models/session_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -176,5 +177,133 @@ class FirestoreService {
       'onboardingComplete': true,
       'updatedAt': DateTime.now().toIso8601String(),
     }, SetOptions(merge: true));
+  }
+
+  // ── Session Management ────────────────────────────────────────────────────
+  /// Create a new session booking
+  Future<String> createSession(Session session) async {
+    final uid = _uid;
+    final now = DateTime.now();
+    final sessionData = session.copyWith(
+      userId: uid,
+      createdAt: now,
+      updatedAt: now,
+    ).toMap();
+
+    // Create in main sessions collection
+    final sessionRef = await _db.collection('sessions').add(sessionData);
+    final sessionId = sessionRef.id;
+
+    // Add to user's my_sessions subcollection
+    await _db.collection('users').doc(uid).collection('my_sessions').doc(sessionId).set(sessionData);
+
+    // Add to mentor's mentor_sessions subcollection
+    await _db.collection('mentors').doc(session.mentorId).collection('mentor_sessions').doc(sessionId).set(sessionData);
+
+    return sessionId;
+  }
+
+  /// Get all sessions for the current user
+  Future<List<Session>> getUserSessions({SessionStatus? status}) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+
+    Query query = _db.collection('users').doc(uid).collection('my_sessions').orderBy('date', descending: false);
+
+    if (status != null) {
+      query = query.where('status', isEqualTo: status.value);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => Session.fromFirestore(doc.id, doc.data() as Map<String, dynamic>)).toList();
+  }
+
+  /// Get sessions for a specific mentor
+  Future<List<Session>> getMentorSessions(String mentorId, {SessionStatus? status}) async {
+    Query query = _db.collection('mentors').doc(mentorId).collection('mentor_sessions').orderBy('date', descending: false);
+
+    if (status != null) {
+      query = query.where('status', isEqualTo: status.value);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs.map((doc) => Session.fromFirestore(doc.id, doc.data() as Map<String, dynamic>)).toList();
+  }
+
+  /// Check if a time slot is available for a mentor on a specific date
+  Future<bool> checkTimeSlotAvailability(String mentorId, DateTime date, String timeSlot) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    final snapshot = await _db
+        .collection('mentors')
+        .doc(mentorId)
+        .collection('mentor_sessions')
+        .where('date', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
+        .where('date', isLessThanOrEqualTo: endOfDay.toIso8601String())
+        .where('timeSlot', isEqualTo: timeSlot)
+        .where('status', whereIn: ['pending', 'confirmed'])
+        .get();
+
+    return snapshot.docs.isEmpty;
+  }
+
+  /// Update session status
+  Future<void> updateSessionStatus(String sessionId, String mentorId, SessionStatus status) async {
+    final uid = _uid;
+    final now = DateTime.now();
+    final updateData = {
+      'status': status.value,
+      'updatedAt': now.toIso8601String(),
+    };
+
+    // Update in main sessions collection
+    await _db.collection('sessions').doc(sessionId).update(updateData);
+
+    // Update in user's subcollection
+    await _db.collection('users').doc(uid).collection('my_sessions').doc(sessionId).update(updateData);
+
+    // Update in mentor's subcollection
+    await _db.collection('mentors').doc(mentorId).collection('mentor_sessions').doc(sessionId).update(updateData);
+  }
+
+  /// Cancel a session
+  Future<void> cancelSession(String sessionId, String mentorId) async {
+    await updateSessionStatus(sessionId, mentorId, SessionStatus.cancelled);
+  }
+
+  /// Get upcoming sessions for the current user
+  Future<List<Session>> getUpcomingSessions() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+
+    final now = DateTime.now();
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('my_sessions')
+        .where('date', isGreaterThanOrEqualTo: now.toIso8601String())
+        .where('status', whereIn: ['pending', 'confirmed'])
+        .orderBy('date', descending: false)
+        .get();
+
+    return snapshot.docs.map((doc) => Session.fromFirestore(doc.id, doc.data())).toList();
+  }
+
+  /// Get past sessions for the current user
+  Future<List<Session>> getPastSessions() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return [];
+
+    final now = DateTime.now();
+    final snapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('my_sessions')
+        .where('date', isLessThan: now.toIso8601String())
+        .orderBy('date', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) => Session.fromFirestore(doc.id, doc.data())).toList();
   }
 }
