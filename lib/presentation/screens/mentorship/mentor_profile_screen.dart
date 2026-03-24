@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '/data/models/mentor_model.dart';
+import '/data/models/session_model.dart';
+import '/data/services/firestore_service.dart';
+import '/blocs/session_bloc.dart';
 
 class MentorProfileScreen extends StatelessWidget {
   final Mentor mentor;
@@ -10,9 +15,37 @@ class MentorProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: CustomScrollView(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D1B1E) : const Color(0xFFF5F5F5);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
+    
+    return BlocProvider(
+      create: (_) => SessionBloc(FirestoreService()),
+      child: Builder(
+        builder: (builderContext) => BlocListener<SessionBloc, SessionState>(
+          listener: (context, state) {
+            if (state is SessionBooked) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Session booked successfully with ${mentor.name}!'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is SessionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: bgColor,
+            body: CustomScrollView(
         slivers: [
           // Teal sliver app bar with avatar
           SliverAppBar(
@@ -67,9 +100,10 @@ class MentorProfileScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           mentor.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
+                            color: textColor,
                           ),
                         ),
                       ),
@@ -100,7 +134,7 @@ class MentorProfileScreen extends StatelessWidget {
                     mentor.role,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: subtextColor,
                     ),
                   ),
 
@@ -113,9 +147,10 @@ class MentorProfileScreen extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${mentor.rating}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -123,7 +158,7 @@ class MentorProfileScreen extends StatelessWidget {
                         'rating',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade500,
+                          color: subtextColor,
                         ),
                       ),
                     ],
@@ -155,11 +190,12 @@ class MentorProfileScreen extends StatelessWidget {
 
                   // About section
                   if (mentor.description.isNotEmpty) ...[
-                    const Text(
+                    Text(
                       'About',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -167,7 +203,7 @@ class MentorProfileScreen extends StatelessWidget {
                       mentor.description,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade700,
+                        color: subtextColor,
                         height: 1.6,
                       ),
                     ),
@@ -191,7 +227,7 @@ class MentorProfileScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _showBookSessionDialog(context),
+                      onPressed: () => _showBookSessionDialog(builderContext),
                       icon: const Icon(Icons.calendar_today, size: 18),
                       label: const Text(
                         'Book a Session',
@@ -253,67 +289,100 @@ class MentorProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _statCard(String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF00D4D4),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _statCard(String label, String value) {
+    return Expanded(
+      child: Builder(
+        builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final cardColor = isDark ? const Color(0xFF1A2426) : Colors.white;
+          final subtextColor = isDark ? Colors.white70 : Colors.grey.shade500;
+          
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF00D4D4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: subtextColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _showBookSessionDialog(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to book a session'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Capture the BLoC reference before opening the dialog
+    final sessionBloc = context.read<SessionBloc>();
     final noteController = TextEditingController();
     String selectedTime = 'Morning (9am - 12pm)';
+    DateTime? selectedDate;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xFF1A2426) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final fieldBg = isDark ? const Color(0xFF0D1B1E) : Colors.grey.shade100;
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: dialogBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
               const Icon(Icons.calendar_today, color: _teal, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Book with ${mentor.name}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  'Book with ${mentor.name}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: textColor,
+                  ),
                 ),
               ),
             ],
@@ -323,18 +392,83 @@ class MentorProfileScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
+                  'Select date',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: subtextColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 90)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: _teal,
+                              onPrimary: Colors.black,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (picked != null) {
+                      setDialogState(() => selectedDate = picked);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: fieldBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selectedDate != null ? _teal : Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: selectedDate != null ? _teal : subtextColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          selectedDate != null
+                              ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                              : 'Choose a date',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: selectedDate != null ? textColor : subtextColor,
+                            fontWeight: selectedDate != null ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
                   'Preferred time slot',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black54,
+                    color: subtextColor,
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Time slot chips
                 Wrap(
                   spacing: 6,
+                  runSpacing: 6,
                   children: [
                     'Morning (9am - 12pm)',
                     'Afternoon (1pm - 5pm)',
@@ -342,15 +476,13 @@ class MentorProfileScreen extends StatelessWidget {
                   ].map((slot) {
                     final isSelected = selectedTime == slot;
                     return ChoiceChip(
-                      label: Text(slot,
-                          style: const TextStyle(fontSize: 11)),
+                      label: Text(slot, style: const TextStyle(fontSize: 11)),
                       selected: isSelected,
-                      onSelected: (value) =>
-                          setDialogState(() => selectedTime = slot),
+                      onSelected: (value) => setDialogState(() => selectedTime = slot),
                       selectedColor: _teal,
-                      backgroundColor: Colors.grey.shade100,
+                      backgroundColor: fieldBg,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.black : Colors.grey,
+                        color: isSelected ? Colors.black : textColor,
                         fontWeight: FontWeight.w600,
                       ),
                       side: BorderSide.none,
@@ -361,12 +493,12 @@ class MentorProfileScreen extends StatelessWidget {
                 TextField(
                   controller: noteController,
                   maxLines: 3,
+                  style: TextStyle(color: textColor),
                   decoration: InputDecoration(
                     hintText: 'Add a note (optional)...',
-                    hintStyle:
-                        const TextStyle(fontSize: 12, color: Colors.grey),
+                    hintStyle: TextStyle(fontSize: 12, color: subtextColor),
                     filled: true,
-                    fillColor: Colors.grey.shade100,
+                    fillColor: fieldBg,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -383,22 +515,31 @@ class MentorProfileScreen extends StatelessWidget {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                        'Session booked with ${mentor.name} — $selectedTime'),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
+              onPressed: selectedDate != null
+                  ? () {
+                      final session = Session(
+                        id: '',
+                        mentorId: mentor.id,
+                        mentorName: mentor.name,
+                        userId: user.uid,
+                        userName: user.displayName ?? user.email ?? 'User',
+                        userEmail: user.email ?? '',
+                        date: selectedDate!,
+                        timeSlot: selectedTime,
+                        note: noteController.text.trim(),
+                        status: SessionStatus.pending,
+                        createdAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      );
+                      sessionBloc.add(BookSession(session));
+                      Navigator.pop(dialogContext);
+                    }
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _teal,
                 foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+                disabledBackgroundColor: Colors.grey.shade300,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               child: const Text('Confirm Booking'),
             ),

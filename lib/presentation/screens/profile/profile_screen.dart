@@ -106,6 +106,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                       const SizedBox(height: 8),
                       _buildMenuCard([
                         _MenuItem(
+                          icon: Icons.calendar_month_outlined,
+                          label: 'My Sessions',
+                          subtitle: 'View your booked mentorship sessions',
+                          onTap: () => Navigator.pushNamed(context, '/my-sessions'),
+                        ),
+                        _MenuItem(
                           icon: Icons.star_outline_rounded,
                           label: 'My Skills',
                           subtitle: 'View and manage your skill portfolio',

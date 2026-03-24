@@ -12,6 +12,7 @@ import 'presentation/screens/auth/verify_email_screen.dart';
 import 'presentation/screens/course/course_completion_screen.dart';
 import 'presentation/screens/profile/preferences_screen.dart';
 import 'presentation/screens/accessibility/accessibility_setup_screen.dart';
+import 'presentation/screens/mentorship/my_sessions_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,7 @@ class MainApp extends StatelessWidget {
           '/course-completion': (context) => const CourseCompletionScreen(),
           '/preferences': (context) => const PreferencesScreen(),
           '/accessibility-setup': (context) => const AccessibilitySetupScreen(),
+          '/my-sessions': (context) => const MySessionsScreen(),
         },
         ),
       ),
