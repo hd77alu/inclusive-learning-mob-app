@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../blocs/theme_bloc.dart';
+import '/blocs/theme_bloc.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -11,7 +11,7 @@ class PreferencesScreen extends StatefulWidget {
 }
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
-  bool _notifications = true;
+  bool _notifications = false;
   String _language = 'English';
   bool? _localDarkMode;
 
@@ -24,7 +24,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _notifications = prefs.getBool('notifications') ?? true;
+      _notifications = prefs.getBool('notifications') ?? false;
       _language = prefs.getString('language') ?? 'English';
     });
   }

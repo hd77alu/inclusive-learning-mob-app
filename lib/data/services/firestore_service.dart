@@ -15,6 +15,52 @@ class FirestoreService {
     return uid;
   }
 
+  // ── User Management ───────────────────────────────────────────────────────
+  Future<void> createUserDocument(String uid, String email, String displayName, {bool isVerified = false}) async {
+    await _db.collection('users').doc(uid).set({
+      'email': email,
+      'displayName': displayName,
+      'isVerified': isVerified,
+      'createdAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> updateUserVerificationStatus(String uid, bool isVerified) async {
+    await _db.collection('users').doc(uid).update({
+      'isVerified': isVerified,
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Get all users ordered by creation time (newest first)
+  Future<List<Map<String, dynamic>>> getAllUsersOrderedByCreation({bool descending = true}) async {
+    final snapshot = await _db
+        .collection('users')
+        .orderBy('createdAt', descending: descending)
+        .get();
+    return snapshot.docs.map((doc) => {'uid': doc.id, ...doc.data()}).toList();
+  }
+
+  /// Get recent users (last N users)
+  Future<List<Map<String, dynamic>>> getRecentUsers({int limit = 10}) async {
+    final snapshot = await _db
+        .collection('users')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs.map((doc) => {'uid': doc.id, ...doc.data()}).toList();
+  }
+
+  /// Get users ordered by last update time
+  Future<List<Map<String, dynamic>>> getUsersOrderedByUpdate({bool descending = true}) async {
+    final snapshot = await _db
+        .collection('users')
+        .orderBy('updatedAt', descending: descending)
+        .get();
+    return snapshot.docs.map((doc) => {'uid': doc.id, ...doc.data()}).toList();
+  }
+
   // ── Mentors ───────────────────────────────────────────────────────────────
   Future<List<Mentor>> getMentors() async {
     final snapshot = await _db.collection('mentors').get();

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'mentor_profile_screen.dart';
-import '../../blocs/mentorship_bloc.dart';
-import '../../data/services/firestore_service.dart';
-import '../../data/models/mentor_model.dart';
+import '/blocs/mentorship_bloc.dart';
+import '/data/services/firestore_service.dart';
+import '/data/models/mentor_model.dart';
 
 class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});
@@ -71,7 +71,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     );
   }
 
-  // Teal header with back arrow, title, profile icon
+  // Teal header with back arrow, title
   Widget _buildHeader(BuildContext context) {
     return Container(
       color: _teal,
@@ -109,10 +109,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.black),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
-          ),
+          const SizedBox(width: 48),
         ],
       ),
     );

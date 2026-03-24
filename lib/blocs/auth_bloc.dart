@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../data/services/firestore_service.dart';
 
 // ── Events ────────────────────────────────────────────────────────────────────
 
@@ -91,12 +92,14 @@ class AuthEmailVerificationSent extends AuthState {
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth;
   final GoogleSignIn? _googleSignIn;
+  final FirestoreService _firestoreService;
 
-  AuthBloc({FirebaseAuth? auth, GoogleSignIn? googleSignIn})
+  AuthBloc({FirebaseAuth? auth, GoogleSignIn? googleSignIn, FirestoreService? firestoreService})
       : _auth = auth ?? FirebaseAuth.instance,
       _googleSignIn = kIsWeb
         ? null
         : (googleSignIn ?? GoogleSignIn(scopes: ['email', 'profile'])),
+      _firestoreService = firestoreService ?? FirestoreService(),
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignUpWithEmail>(_onSignUpWithEmail);
@@ -140,6 +143,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       final user = credential.user!;
       await user.updateDisplayName(event.name.trim());
+      
+      // Create Firestore user document
+      await _firestoreService.createUserDocument(
+        user.uid,
+        event.email.trim(),
+        event.name.trim(),
+        isVerified: false,
+      );
+      
       await user.sendEmailVerification();
       emit(AuthEmailVerificationSent(user));
     } on FirebaseAuthException catch (e) {
@@ -202,6 +214,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
         result = await _auth.signInWithCredential(credential);
       }
+      
+      // Create Firestore user document for new Google users
+      final isNewUser = result.additionalUserInfo?.isNewUser ?? false;
+      if (isNewUser) {
+        await _firestoreService.createUserDocument(
+          result.user!.uid,
+          result.user!.email ?? '',
+          result.user!.displayName ?? 'User',
+          isVerified: true, // Google users are pre-verified
+        );
+      }
+      
       emit(AuthAuthenticated(result.user!));
     } on FirebaseAuthException catch (e) {
       emit(AuthError(_mapFirebaseError(e.code)));
@@ -264,6 +288,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (user == null) {
         emit(AuthUnauthenticated());
       } else if (user.emailVerified) {
+        // Update Firestore verification status
+        try {
+          await _firestoreService.updateUserVerificationStatus(user.uid, true);
+        } catch (_) {
+          // Continue even if Firestore update fails
+        }
         emit(AuthAuthenticated(user));
       } else {
         emit(AuthEmailVerificationRequired(user));

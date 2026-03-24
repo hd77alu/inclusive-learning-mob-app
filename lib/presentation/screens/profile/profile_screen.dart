@@ -44,6 +44,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName ?? 'Learner';
     final email = user?.email ?? 'No email';
+    final isVerified = user?.emailVerified ?? false;
+    final isGoogleUser = user?.providerData.any((p) => p.providerId == 'google.com') ?? false;
     final initials = displayName.isNotEmpty
         ? displayName.trim().split(' ').map((e) => e[0]).take(2).join()
         : '?';
@@ -65,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                   child: Column(
                     children: [
-                      _buildAvatarCard(initials, displayName, email),
+                      _buildAvatarCard(initials, displayName, email, isVerified || isGoogleUser),
                       const SizedBox(height: 4),
                       _buildStatsRow(),
                       const SizedBox(height: 20),
@@ -89,6 +91,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                             ),
                           ),
                         ),
+                        _MenuItem(
+                          icon: Icons.accessibility_new_outlined,
+                          label: 'Accessibility Settings',
+                          subtitle: 'Screen reader, captions & more',
+                          onTap: () => Navigator.pushNamed(
+                              context, '/accessibility-setup'),
+                        ),
                       ]),
                       const SizedBox(height: 16),
                       _buildSectionLabel('Learning'),
@@ -99,13 +108,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                           label: 'My Skills',
                           subtitle: 'View and manage your skill portfolio',
                           onTap: () => Navigator.pushNamed(context, '/skills'),
-                        ),
-                        _MenuItem(
-                          icon: Icons.accessibility_new_outlined,
-                          label: 'Accessibility Settings',
-                          subtitle: 'Screen reader, captions & more',
-                          onTap: () => Navigator.pushNamed(
-                              context, '/accessibility-setup'),
                         ),
                         _MenuItem(
                           icon: Icons.school_outlined,
@@ -121,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           onPressed: _confirmLogout,
                           icon: const Icon(Icons.logout, color: Colors.red),
                           label: const Text(
-                            'Log Out',
+                            'LOGOUT',
                             style: TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.w700,
@@ -187,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.black87),
-            tooltip: 'Logout',
+            tooltip: 'LOGOUT',
             onPressed: _confirmLogout,
           ),
         ],
@@ -195,7 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildAvatarCard(String initials, String displayName, String email) {
+  Widget _buildAvatarCard(String initials, String displayName, String email, bool isVerified) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1A2426) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -239,21 +241,52 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: _teal.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'Inclusive Learning Member',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF00A0A0),
+            if (isVerified)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified, size: 14, color: Colors.green.shade700),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Verified',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Unverified',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -425,7 +458,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Log Out',
+        title: const Text('LOGOUT',
             style: TextStyle(fontWeight: FontWeight.w800)),
         content: const Text('Are you sure you want to log out?'),
         actions: [
@@ -447,7 +480,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
-            child: const Text('Log Out'),
+            child: const Text('LOGOUT'),
           ),
         ],
       ),
