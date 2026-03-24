@@ -10,8 +10,13 @@ class MentorProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D1B1E) : const Color(0xFFF5F5F5);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
           // Teal sliver app bar with avatar
@@ -67,9 +72,10 @@ class MentorProfileScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           mentor.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
+                            color: textColor,
                           ),
                         ),
                       ),
@@ -100,7 +106,7 @@ class MentorProfileScreen extends StatelessWidget {
                     mentor.role,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: subtextColor,
                     ),
                   ),
 
@@ -113,9 +119,10 @@ class MentorProfileScreen extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${mentor.rating}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -123,7 +130,7 @@ class MentorProfileScreen extends StatelessWidget {
                         'rating',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade500,
+                          color: subtextColor,
                         ),
                       ),
                     ],
@@ -155,11 +162,12 @@ class MentorProfileScreen extends StatelessWidget {
 
                   // About section
                   if (mentor.description.isNotEmpty) ...[
-                    const Text(
+                    Text(
                       'About',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -167,7 +175,7 @@ class MentorProfileScreen extends StatelessWidget {
                       mentor.description,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade700,
+                        color: subtextColor,
                         height: 1.6,
                       ),
                     ),
@@ -258,39 +266,47 @@ class MentorProfileScreen extends StatelessWidget {
 
   Widget _statCard(String label, String value) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+      child: Builder(
+        builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final cardColor = isDark ? const Color(0xFF1A2426) : Colors.white;
+          final subtextColor = isDark ? Colors.white70 : Colors.grey.shade500;
+          
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF00D4D4),
-              ),
+            child: Column(
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF00D4D4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: subtextColor,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -298,11 +314,17 @@ class MentorProfileScreen extends StatelessWidget {
   void _showBookSessionDialog(BuildContext context) {
     final noteController = TextEditingController();
     String selectedTime = 'Morning (9am - 12pm)';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xFF1A2426) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final fieldBg = isDark ? const Color(0xFF0D1B1E) : Colors.grey.shade100;
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: dialogBg,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
@@ -311,9 +333,10 @@ class MentorProfileScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'Book with ${mentor.name}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
+                  color: textColor,
                 ),
               ),
             ],
@@ -323,12 +346,12 @@ class MentorProfileScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Preferred time slot',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.black54,
+                    color: subtextColor,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -348,9 +371,9 @@ class MentorProfileScreen extends StatelessWidget {
                       onSelected: (value) =>
                           setDialogState(() => selectedTime = slot),
                       selectedColor: _teal,
-                      backgroundColor: Colors.grey.shade100,
+                      backgroundColor: fieldBg,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.black : Colors.grey,
+                        color: isSelected ? Colors.black : textColor,
                         fontWeight: FontWeight.w600,
                       ),
                       side: BorderSide.none,
@@ -361,12 +384,13 @@ class MentorProfileScreen extends StatelessWidget {
                 TextField(
                   controller: noteController,
                   maxLines: 3,
+                  style: TextStyle(color: textColor),
                   decoration: InputDecoration(
                     hintText: 'Add a note (optional)...',
                     hintStyle:
-                        const TextStyle(fontSize: 12, color: Colors.grey),
+                        TextStyle(fontSize: 12, color: subtextColor),
                     filled: true,
-                    fillColor: Colors.grey.shade100,
+                    fillColor: fieldBg,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
