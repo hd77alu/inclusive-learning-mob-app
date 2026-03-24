@@ -154,8 +154,8 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     try {
       await firestoreService.cancelSession(event.sessionId, event.mentorId);
       emit(SessionCancelled(event.sessionId));
-      // Reload sessions after cancellation
-      add(LoadUserSessions());
+      // Reload upcoming sessions after cancellation
+      add(LoadUpcomingSessions());
     } catch (e) {
       emit(SessionError('Failed to cancel session: ${e.toString()}'));
     }

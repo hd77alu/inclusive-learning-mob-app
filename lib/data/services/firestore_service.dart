@@ -232,20 +232,26 @@ class FirestoreService {
 
   /// Check if a time slot is available for a mentor on a specific date
   Future<bool> checkTimeSlotAvailability(String mentorId, DateTime date, String timeSlot) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-
     final snapshot = await _db
         .collection('mentors')
         .doc(mentorId)
         .collection('mentor_sessions')
-        .where('date', isGreaterThanOrEqualTo: startOfDay.toIso8601String())
-        .where('date', isLessThanOrEqualTo: endOfDay.toIso8601String())
-        .where('timeSlot', isEqualTo: timeSlot)
-        .where('status', whereIn: ['pending', 'confirmed'])
+        .orderBy('date')
         .get();
 
-    return snapshot.docs.isEmpty;
+    // Filter in memory to avoid composite index requirement
+    final conflictingSessions = snapshot.docs
+        .map((doc) => Session.fromFirestore(doc.id, doc.data()))
+        .where((session) {
+          final sessionDate = DateTime(session.date.year, session.date.month, session.date.day);
+          final targetDate = DateTime(date.year, date.month, date.day);
+          return sessionDate.isAtSameMomentAs(targetDate) &&
+              session.timeSlot == timeSlot &&
+              (session.status == SessionStatus.pending || session.status == SessionStatus.confirmed);
+        })
+        .toList();
+
+    return conflictingSessions.isEmpty;
   }
 
   /// Update session status
@@ -282,12 +288,16 @@ class FirestoreService {
         .collection('users')
         .doc(uid)
         .collection('my_sessions')
-        .where('date', isGreaterThanOrEqualTo: now.toIso8601String())
-        .where('status', whereIn: ['pending', 'confirmed'])
         .orderBy('date', descending: false)
         .get();
 
-    return snapshot.docs.map((doc) => Session.fromFirestore(doc.id, doc.data())).toList();
+    // Filter in memory instead of using complex Firestore query
+    return snapshot.docs
+        .map((doc) => Session.fromFirestore(doc.id, doc.data()))
+        .where((session) => 
+            session.date.isAfter(now) && 
+            (session.status == SessionStatus.pending || session.status == SessionStatus.confirmed))
+        .toList();
   }
 
   /// Get past sessions for the current user

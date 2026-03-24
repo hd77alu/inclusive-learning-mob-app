@@ -22,29 +22,30 @@ class MentorProfileScreen extends StatelessWidget {
     
     return BlocProvider(
       create: (_) => SessionBloc(FirestoreService()),
-      child: BlocListener<SessionBloc, SessionState>(
-        listener: (context, state) {
-          if (state is SessionBooked) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Session booked successfully with ${mentor.name}!'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          } else if (state is SessionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
-        child: Scaffold(
-          backgroundColor: bgColor,
-          body: CustomScrollView(
+      child: Builder(
+        builder: (builderContext) => BlocListener<SessionBloc, SessionState>(
+          listener: (context, state) {
+            if (state is SessionBooked) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Session booked successfully with ${mentor.name}!'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } else if (state is SessionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: bgColor,
+            body: CustomScrollView(
         slivers: [
           // Teal sliver app bar with avatar
           SliverAppBar(
@@ -226,7 +227,7 @@ class MentorProfileScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _showBookSessionDialog(context),
+                      onPressed: () => _showBookSessionDialog(builderContext),
                       icon: const Icon(Icons.calendar_today, size: 18),
                       label: const Text(
                         'Book a Session',
@@ -288,6 +289,7 @@ class MentorProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+          ),
         ),
       ),
     );
@@ -352,6 +354,8 @@ class MentorProfileScreen extends StatelessWidget {
       return;
     }
 
+    // Capture the BLoC reference before opening the dialog
+    final sessionBloc = context.read<SessionBloc>();
     final noteController = TextEditingController();
     String selectedTime = 'Morning (9am - 12pm)';
     DateTime? selectedDate;
@@ -510,48 +514,34 @@ class MentorProfileScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel'),
             ),
-            BlocBuilder<SessionBloc, SessionState>(
-              builder: (blocContext, state) {
-                final isBooking = state is SessionBooking;
-                return ElevatedButton(
-                  onPressed: (selectedDate != null && !isBooking)
-                      ? () {
-                          final session = Session(
-                            id: '',
-                            mentorId: mentor.id,
-                            mentorName: mentor.name,
-                            userId: user.uid,
-                            userName: user.displayName ?? user.email ?? 'User',
-                            userEmail: user.email ?? '',
-                            date: selectedDate!,
-                            timeSlot: selectedTime,
-                            note: noteController.text.trim(),
-                            status: SessionStatus.pending,
-                            createdAt: DateTime.now(),
-                            updatedAt: DateTime.now(),
-                          );
-                          blocContext.read<SessionBloc>().add(BookSession(session));
-                          Navigator.pop(dialogContext);
-                        }
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _teal,
-                    foregroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.grey.shade300,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: isBooking
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.black,
-                          ),
-                        )
-                      : const Text('Confirm Booking'),
-                );
-              },
+            ElevatedButton(
+              onPressed: selectedDate != null
+                  ? () {
+                      final session = Session(
+                        id: '',
+                        mentorId: mentor.id,
+                        mentorName: mentor.name,
+                        userId: user.uid,
+                        userName: user.displayName ?? user.email ?? 'User',
+                        userEmail: user.email ?? '',
+                        date: selectedDate!,
+                        timeSlot: selectedTime,
+                        note: noteController.text.trim(),
+                        status: SessionStatus.pending,
+                        createdAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      );
+                      sessionBloc.add(BookSession(session));
+                      Navigator.pop(dialogContext);
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _teal,
+                foregroundColor: Colors.black,
+                disabledBackgroundColor: Colors.grey.shade300,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: const Text('Confirm Booking'),
             ),
           ],
         ),
