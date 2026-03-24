@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/accessibility_bloc.dart';
-import '../../data/services/firestore_service.dart';
+import '/blocs/accessibility_bloc.dart';
+import '/data/services/firestore_service.dart';
 
 class AccessibilitySetupScreen extends StatelessWidget {
   const AccessibilitySetupScreen({super.key});
@@ -31,6 +31,7 @@ class _AccessibilitySetupView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF0D1B1E) : Colors.white;
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacementNamed(context, '/signup');
@@ -46,7 +47,7 @@ class _AccessibilitySetupView extends StatelessWidget {
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ));
-          Navigator.pushReplacementNamed(context, '/signup');
+          Navigator.pop(context);
         } else if (state is AccessibilityError) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(state.message),
@@ -83,7 +84,6 @@ class _AccessibilitySetupView extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: isWide ? 48 : 20),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         _buildStepBar(context),
-                        _buildProgressSection(),
                         const SizedBox(height: 20),
                         _buildHeroCard(isWide),
                         const SizedBox(height: 20),
@@ -127,24 +127,7 @@ class _AccessibilitySetupView extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressSection() {
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text('Onboarding Progress', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
-        Text('Step 1 of 3', style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
-      ]),
-      const SizedBox(height: 6),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: const LinearProgressIndicator(
-          value: 0.33,
-          backgroundColor: Color(0xFFEEEEEE),
-          valueColor: AlwaysStoppedAnimation<Color>(teal),
-          minHeight: 5,
-        ),
-      ),
-    ]);
-  }
+
 
   Widget _buildHeroCard(bool isWide) {
     return Container(

@@ -4,18 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'blocs/auth_bloc.dart';
 import 'blocs/theme_bloc.dart';
-import 'presentation/auth/auth_gate.dart';
-import 'presentation/screens/app_outlook_screen.dart';
-import 'presentation/screens/sign_up_screen.dart';
-import 'presentation/screens/forgot_password_screen.dart';
-import 'presentation/screens/verify_email_screen.dart';
-import 'presentation/screens/course_completion_screen.dart';
-import 'presentation/screens/mentorship_hub_screen.dart';
-import 'presentation/screens/profile_screen.dart';
-import 'presentation/screens/my_skills_screen.dart';
-import 'presentation/screens/preferences_screen.dart';
-import 'presentation/screens/discover_screen.dart';
-import 'presentation/screens/accessibility_setup_screen.dart';
+import 'presentation/screens/auth/auth_gate.dart';
+import 'presentation/screens/core/app_outlook_screen.dart';
+import 'presentation/screens/auth/sign_up_screen.dart';
+import 'presentation/screens/auth/forgot_password_screen.dart';
+import 'presentation/screens/auth/verify_email_screen.dart';
+import 'presentation/screens/course/course_completion_screen.dart';
+import 'presentation/screens/profile/preferences_screen.dart';
+import 'presentation/screens/accessibility/accessibility_setup_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,19 +51,13 @@ class MainApp extends StatelessWidget {
           themeMode: themeState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           initialRoute: '/',
         routes: {
-          // AuthGate checks persisted auth state and routes automatically.
           '/': (context) => const AuthGate(),
-          // Authenticated routes:
           '/outlook': (context) => const OutlookScreen(),
           '/signup': (context) => const SignUpScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/verify-email': (context) => const VerifyEmailScreen(),
           '/course-completion': (context) => const CourseCompletionScreen(),
-          '/mentorship-hub': (context) => const MentorshipHubScreen(),
-          '/profile': (context) => const ProfileScreen(),
-          '/skills': (context) => const MySkillsScreen(),
           '/preferences': (context) => const PreferencesScreen(),
-          '/discover': (context) => const DiscoverScreen(),
           '/accessibility-setup': (context) => const AccessibilitySetupScreen(),
         },
         ),

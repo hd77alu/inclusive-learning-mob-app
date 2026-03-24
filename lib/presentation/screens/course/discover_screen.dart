@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../blocs/discover_bloc.dart';
-import '../../data/models/course_model.dart';
-import '../../data/models/course_progress_model.dart';
-import '../../data/services/firestore_service.dart';
+import '/blocs/discover_bloc.dart';
+import '/data/models/course_model.dart';
+import '/data/models/course_progress_model.dart';
+import '/data/services/firestore_service.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -123,10 +123,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.black),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
-          ),
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -174,7 +171,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
               final isSelected = _categories[i] == selected;
               return ChoiceChip(
@@ -624,20 +621,24 @@ class _CourseCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: currentProgress,
                 backgroundColor: Colors.grey.shade200,
-                valueColor: const AlwaysStoppedAnimation<Color>(teal),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  currentProgress >= 1.0 ? Colors.green : teal,
+                ),
                 minHeight: 6,
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Mark progress:',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 8),
-            _ProgressSlider(
-              courseId: course.id,
-              initialProgress: currentProgress,
-            ),
+            if (currentProgress < 1.0) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Mark progress:',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 8),
+              _ProgressSlider(
+                courseId: course.id,
+                initialProgress: currentProgress,
+              ),
+            ],
           ],
         ),
         actions: [
@@ -645,21 +646,49 @@ class _CourseCard extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogCtx),
             child: const Text('Close'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogCtx);
-              Navigator.pushNamed(context, '/course-completion');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: teal,
-              foregroundColor: Colors.black,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+          if (currentProgress >= 1.0)
+            ElevatedButton(
+              onPressed: () {
+                context.read<DiscoverBloc>().add(UpdateProgress(course.id, 0.0));
+                Navigator.pop(dialogCtx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Course marked as incomplete'),
+                    backgroundColor: Colors.orange,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
+              child: const Text('Unmark Completed'),
+            )
+          else
+            ElevatedButton(
+              onPressed: () {
+                context.read<DiscoverBloc>().add(UpdateProgress(course.id, 1.0));
+                Navigator.pop(dialogCtx);
+                Navigator.pushNamed(context, '/course-completion');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: teal,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text('Mark as Completed'),
             ),
-            child: const Text('Open Course'),
-          ),
         ],
       ),
     );

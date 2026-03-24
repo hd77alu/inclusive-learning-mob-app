@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../blocs/mentorship_bloc.dart';
-import '../../data/models/mentor_model.dart';
-import '../screens/mentor_profile_edit_screen.dart';
+import '/blocs/mentorship_bloc.dart';
+import '/data/models/mentor_model.dart';
+import '/presentation/screens/mentorship/mentor_profile_edit_screen.dart';
 
 class MentorCard extends StatelessWidget {
   final Mentor mentor;

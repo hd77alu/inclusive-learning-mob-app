@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../blocs/auth_bloc.dart';
-import '../screens/app_outlook_screen.dart';
-import '../screens/discover_screen.dart';
-import '../screens/splash_screen.dart';
-import '../screens/verify_email_screen.dart';
+import '/blocs/auth_bloc.dart';
+import '/presentation/screens/core/app_outlook_screen.dart';
+import '/presentation/screens/core/main_navigation_screen.dart';
+import '/presentation/screens/auth/splash_screen.dart';
+import '/presentation/screens/auth/verify_email_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -18,7 +18,7 @@ class AuthGate extends StatelessWidget {
           return const SplashScreen();
         }
         if (state is AuthAuthenticated) {
-          return const DiscoverScreen();
+          return const MainNavigationScreen();
         }
         if (state is AuthEmailVerificationRequired ||
             state is AuthEmailVerificationSent) {

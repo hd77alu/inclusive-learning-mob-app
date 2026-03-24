@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/auth_bloc.dart';
+import '/blocs/auth_bloc.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  App Outlook Screen  (Welcome / Landing)

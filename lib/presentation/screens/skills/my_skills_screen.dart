@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/skills_bloc.dart';
-import '../../data/services/firestore_service.dart';
-import '../../data/models/skill_model.dart';
+import '/blocs/skills_bloc.dart';
+import '/data/services/firestore_service.dart';
+import '/data/models/skill_model.dart';
 
 class MySkillsScreen extends StatefulWidget {
   const MySkillsScreen({super.key});

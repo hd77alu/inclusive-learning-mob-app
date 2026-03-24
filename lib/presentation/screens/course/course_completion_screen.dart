@@ -85,6 +85,16 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
         const Spacer(),
         _buildTrophyIcon(),
         const SizedBox(height: 32),
@@ -259,8 +269,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () =>
-              Navigator.pushNamed(context, '/mentorship-hub'),
+          onPressed: () => Navigator.pop(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: _teal,
             foregroundColor: Colors.black,
@@ -271,7 +280,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
             elevation: 0,
           ),
           child: const Text(
-            'Proceed to Mentorship Hub',
+            'Back to Courses',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
