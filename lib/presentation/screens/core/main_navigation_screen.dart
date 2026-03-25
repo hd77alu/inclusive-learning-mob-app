@@ -66,8 +66,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Mentorship',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.star_outline),
-              activeIcon: Icon(Icons.star),
+              icon: Icon(Icons.school_outlined),
+              activeIcon: Icon(Icons.school),
               label: 'Skills',
             ),
             BottomNavigationBarItem(
