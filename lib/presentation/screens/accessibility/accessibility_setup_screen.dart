@@ -123,10 +123,16 @@ class _AccessibilitySetupView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...(_options.map((opt) => _OptionTile(
-                          option: opt,
-                          isSelected: selectedMode == opt.id,
-                          onTap: isSaving ? null : () => context.read<AccessibilityBloc>().add(SelectAccessibilityMode(opt.id)),
+                        ...(_options.map((opt) => Semantics(
+                          button: true,
+                          selected: selectedMode == opt.id,
+                          label: '${opt.label}, ${opt.description}',
+                          hint: selectedMode == opt.id ? 'Currently selected' : 'Tap to select',
+                          child: _OptionTile(
+                            option: opt,
+                            isSelected: selectedMode == opt.id,
+                            onTap: isSaving ? null : () => context.read<AccessibilityBloc>().add(SelectAccessibilityMode(opt.id)),
+                          ),
                         ))),
                         const SizedBox(height: 12),
                         _buildContinueButton(context, selectedMode, isSaving),
@@ -147,11 +153,16 @@ class _AccessibilitySetupView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
       child: Row(children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left, size: 26),
-          onPressed: () => Navigator.maybePop(context),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        Semantics(
+          button: true,
+          label: 'Go back',
+          hint: 'Double tap to return to previous screen',
+          child: IconButton(
+            icon: const Icon(Icons.chevron_left, size: 26),
+            onPressed: () => Navigator.maybePop(context),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
         ),
         const Expanded(
           child: Text('Customize Your Experience',
@@ -244,22 +255,27 @@ class _AccessibilitySetupView extends StatelessWidget {
   }
 
   Widget _buildContinueButton(BuildContext context, String? selectedMode, bool isSaving) {
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton(
-        onPressed: (selectedMode != null && !isSaving)
-            ? () => context.read<AccessibilityBloc>().add(SaveAccessibilityPreference(selectedMode))
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: teal,
-          disabledBackgroundColor: Colors.grey.shade300,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+    return Semantics(
+      button: true,
+      label: 'Save accessibility changes',
+      hint: selectedMode != null ? 'Double tap to save and apply changes' : 'Select a mode first',
+      child: SizedBox(
+        height: 52,
+        child: ElevatedButton(
+          onPressed: (selectedMode != null && !isSaving)
+              ? () => context.read<AccessibilityBloc>().add(SaveAccessibilityPreference(selectedMode))
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: teal,
+            disabledBackgroundColor: Colors.grey.shade300,
+            foregroundColor: Colors.black,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+          child: isSaving
+              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
+              : const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
         ),
-        child: isSaving
-            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
-            : const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
       ),
     );
   }

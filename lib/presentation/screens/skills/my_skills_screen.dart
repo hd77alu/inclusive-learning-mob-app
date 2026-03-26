@@ -273,29 +273,33 @@ class _MySkillsScreenState extends State<MySkillsScreen>
     required String value,
   }) {
     return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, color: _teal, size: 20),
-          const SizedBox(height: 6),
-          AccessibleText(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: Colors.black87,
+      child: Semantics(
+        label: '$value $label',
+        hint: 'Skills summary statistics',
+        child: Column(
+          children: [
+            Icon(icon, color: _teal, size: 20),
+            const SizedBox(height: 6),
+            AccessibleText(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: Colors.black87,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          AccessibleText(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            AccessibleText(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -319,98 +323,115 @@ class _MySkillsScreenState extends State<MySkillsScreen>
           icon: Icons.star_outline,
         );
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // Level icon badge
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: cfg.bg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(cfg.icon, color: cfg.color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AccessibleText(
-                        skill.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: cfg.bg,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: AccessibleText(
-                          skill.level.isNotEmpty ? skill.level : 'Unknown',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: cfg.color,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Action buttons
-                IconButton(
-                  icon: Icon(Icons.edit_outlined,
-                      color: Colors.grey.shade500, size: 20),
-                  tooltip: 'Edit skill',
-                  onPressed: () => _showSkillDialog(blocCtx, skill: skill),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline,
-                      color: Colors.red.shade300, size: 20),
-                  tooltip: 'Delete skill',
-                  onPressed: () =>
-                      _confirmDelete(blocCtx, skill),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Progress bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: cfg.progress,
-                minHeight: 6,
-                backgroundColor: cfg.bg,
-                valueColor: AlwaysStoppedAnimation<Color>(cfg.color),
-              ),
+    return Semantics(
+      label: '${skill.name}, ${skill.level} level, ${(cfg.progress * 100).round()} percent proficiency',
+      hint: 'Skill card with edit and delete options',
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Level icon badge
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: cfg.bg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(cfg.icon, color: cfg.color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AccessibleText(
+                          skill.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cfg.bg,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: AccessibleText(
+                            skill.level.isNotEmpty ? skill.level : 'Unknown',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: cfg.color,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Action buttons
+                  Semantics(
+                    button: true,
+                    label: 'Edit ${skill.name}',
+                    hint: 'Double tap to edit skill',
+                    child: IconButton(
+                      icon: Icon(Icons.edit_outlined,
+                          color: Colors.grey.shade500, size: 20),
+                      tooltip: 'Edit skill',
+                      onPressed: () => _showSkillDialog(blocCtx, skill: skill),
+                    ),
+                  ),
+                  Semantics(
+                    button: true,
+                    label: 'Delete ${skill.name}',
+                    hint: 'Double tap to remove skill',
+                    child: IconButton(
+                      icon: Icon(Icons.delete_outline,
+                          color: Colors.red.shade300, size: 20),
+                      tooltip: 'Delete skill',
+                      onPressed: () =>
+                          _confirmDelete(blocCtx, skill),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Progress bar
+              Semantics(
+                label: 'Progress ${(cfg.progress * 100).round()} percent',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: cfg.progress,
+                    minHeight: 6,
+                    backgroundColor: cfg.bg,
+                    valueColor: AlwaysStoppedAnimation<Color>(cfg.color),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -419,39 +440,39 @@ class _MySkillsScreenState extends State<MySkillsScreen>
   // ─── Empty state ─────────────────────────────────────────────────────────
   Widget _buildEmpty(BuildContext ctx) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: _teal.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.star_outline_rounded,
-                size: 48,
+                size: 40,
                 color: _teal,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             const AccessibleText(
               'No skills added yet',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             AccessibleText(
-              'Add your first skill to start building your portfolio and showcase your abilities.',
+              'Add your first skill to start building your portfolio.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: Colors.grey.shade500,
-                height: 1.5,
+                height: 1.3,
               ),
             ),
           ],
@@ -464,14 +485,19 @@ class _MySkillsScreenState extends State<MySkillsScreen>
   Widget _buildFAB(BuildContext ctx) {
     final a11y = AccessibilityProvider.of(context);
     return BlocBuilder<SkillsBloc, SkillsState>(
-      builder: (blocCtx, _) => FloatingActionButton.extended(
-        onPressed: () => _showSkillDialog(blocCtx),
-        backgroundColor: _teal,
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(
-          'Add Skill',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14 * a11y.fontSizeMultiplier),
+      builder: (blocCtx, _) => Semantics(
+        button: true,
+        label: 'Add new skill',
+        hint: 'Double tap to add a skill to your portfolio',
+        child: FloatingActionButton.extended(
+          onPressed: () => _showSkillDialog(blocCtx),
+          backgroundColor: _teal,
+          foregroundColor: Colors.black,
+          icon: const Icon(Icons.add_rounded),
+          label: Text(
+            'Add Skill',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14 * a11y.fontSizeMultiplier),
+          ),
         ),
       ),
     );
@@ -502,20 +528,25 @@ class _MySkillsScreenState extends State<MySkillsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Skill name field
-              TextField(
-                controller: nameCtrl,
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: 'Skill Name',
-                  hintText: 'e.g. Flutter, Sign Language',
-                  prefixIcon: const Icon(Icons.code_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _teal, width: 2),
+              Semantics(
+                textField: true,
+                label: 'Skill name',
+                hint: 'Enter skill name, for example Flutter or Sign Language',
+                child: TextField(
+                  controller: nameCtrl,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: 'Skill Name',
+                    hintText: 'e.g. Flutter, Sign Language',
+                    prefixIcon: const Icon(Icons.code_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _teal, width: 2),
+                    ),
                   ),
                 ),
               ),
@@ -535,27 +566,33 @@ class _MySkillsScreenState extends State<MySkillsScreen>
                 children: _levelOptions.map((level) {
                   final cfg = _levelConfig[level]!;
                   final isSelected = selectedLevel == level;
-                  return GestureDetector(
-                    onTap: () =>
-                        setDialogState(() => selectedLevel = level),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? cfg.color : cfg.bg,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? cfg.color : Colors.transparent,
-                          width: 2,
+                  return Semantics(
+                    button: true,
+                    selected: isSelected,
+                    label: '$level proficiency level',
+                    hint: isSelected ? 'Currently selected' : 'Tap to select',
+                    child: GestureDetector(
+                      onTap: () =>
+                          setDialogState(() => selectedLevel = level),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? cfg.color : cfg.bg,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? cfg.color : Colors.transparent,
+                            width: 2,
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        level,
-                        style: TextStyle(
-                          fontSize: 13 * a11y.fontSizeMultiplier,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : cfg.color,
+                        child: Text(
+                          level,
+                          style: TextStyle(
+                            fontSize: 13 * a11y.fontSizeMultiplier,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected ? Colors.white : cfg.color,
+                          ),
                         ),
                       ),
                     ),

@@ -253,9 +253,13 @@ class _SignUpScreenState extends State<SignUpScreen>
                         const SizedBox(height: 20),
 
                         // Tab bar
-                        _AuthTabBar(
-                          controller: _tabController,
-                          teal: teal,
+                        Semantics(
+                          label: 'Authentication tabs',
+                          hint: 'Swipe to switch between Sign In and Sign Up',
+                          child: _AuthTabBar(
+                            controller: _tabController,
+                            teal: teal,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -353,9 +357,14 @@ class _SignUpScreenState extends State<SignUpScreen>
                         const SizedBox(height: 12),
 
                         // ── Google button ──
-                        _GoogleButton(
-                          isLoading: isLoading,
-                          onPressed: isLoading ? null : _handleGoogle,
+                        Semantics(
+                          button: true,
+                          label: 'Continue with Google',
+                          hint: 'Double tap to sign in with Google',
+                          child: _GoogleButton(
+                            isLoading: isLoading,
+                            onPressed: isLoading ? null : _handleGoogle,
+                          ),
                         ),
                         const SizedBox(height: 24),
 
@@ -367,13 +376,17 @@ class _SignUpScreenState extends State<SignUpScreen>
 
                         // ── Home button ──
                         Center(
-                          child: GestureDetector(
-                            onTap: () => Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/outlook',
-                              (_) => false,
-                            ),
-                            child: Container(
+                          child: Semantics(
+                            button: true,
+                            label: 'Go to home screen',
+                            hint: 'Double tap to return to welcome screen',
+                            child: GestureDetector(
+                              onTap: () => Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/outlook',
+                                (_) => false,
+                              ),
+                              child: Container(
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
@@ -384,6 +397,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                                 Icons.home,
                                 color: Colors.black,
                                 size: 28,
+                              ),
                               ),
                             ),
                           ),
@@ -551,20 +565,28 @@ class _SignInForm extends StatelessWidget {
           errorText: passwordErr,
           onChanged: onPasswordChanged,
           teal: teal,
-          suffixIcon: IconButton(
-            icon: Icon(
-              passwordVisible ? Icons.visibility_off : Icons.visibility,
-              color: Colors.black54,
-              size: 20,
+          suffixIcon: Semantics(
+            label: passwordVisible ? 'Hide password' : 'Show password',
+            hint: 'Double tap to toggle password visibility',
+            child: IconButton(
+              icon: Icon(
+                passwordVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black54,
+                size: 20,
+              ),
+              onPressed: onTogglePassword,
             ),
-            onPressed: onTogglePassword,
           ),
         ),
         const SizedBox(height: 6),
         Align(
           alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: onForgotPassword,
+          child: Semantics(
+            button: true,
+            label: 'Forgot password',
+            hint: 'Double tap to reset your password',
+            child: TextButton(
+              onPressed: onForgotPassword,
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
               minimumSize: const Size(0, 28),
@@ -573,23 +595,29 @@ class _SignInForm extends StatelessWidget {
               'Forgot password?',
               style: TextStyle(color: teal, fontSize: 12),
             ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: onSignIn,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: teal,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        Semantics(
+          button: true,
+          label: 'Sign in to your account',
+          hint: 'Double tap to sign in',
+          child: ElevatedButton(
+            onPressed: onSignIn,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: teal,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
             ),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Sign In',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            child: const Text(
+              'Sign In',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
           ),
         ),
       ],
@@ -673,13 +701,17 @@ class _SignUpForm extends StatelessWidget {
           errorText: passwordErr,
           onChanged: onPasswordChanged,
           teal: teal,
-          suffixIcon: IconButton(
-            icon: Icon(
-              passwordVisible ? Icons.visibility_off : Icons.visibility,
-              color: Colors.black54,
-              size: 20,
+          suffixIcon: Semantics(
+            label: passwordVisible ? 'Hide password' : 'Show password',
+            hint: 'Double tap to toggle',
+            child: IconButton(
+              icon: Icon(
+                passwordVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black54,
+                size: 20,
+              ),
+              onPressed: onTogglePassword,
             ),
-            onPressed: onTogglePassword,
           ),
         ),
         const SizedBox(height: 10),
@@ -691,30 +723,39 @@ class _SignUpForm extends StatelessWidget {
           errorText: confirmErr,
           onChanged: onConfirmChanged,
           teal: teal,
-          suffixIcon: IconButton(
-            icon: Icon(
-              confirmVisible ? Icons.visibility_off : Icons.visibility,
-              color: Colors.black54,
-              size: 20,
+          suffixIcon: Semantics(
+            label: confirmVisible ? 'Hide password' : 'Show password',
+            hint: 'Double tap to toggle',
+            child: IconButton(
+              icon: Icon(
+                confirmVisible ? Icons.visibility_off : Icons.visibility,
+                color: Colors.black54,
+                size: 20,
+              ),
+              onPressed: onToggleConfirm,
             ),
-            onPressed: onToggleConfirm,
           ),
         ),
         const SizedBox(height: 14),
-        ElevatedButton(
-          onPressed: onSignUp,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: teal,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        Semantics(
+          button: true,
+          label: 'Create new account',
+          hint: 'Double tap to create account',
+          child: ElevatedButton(
+            onPressed: onSignUp,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: teal,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
             ),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Create Account',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            child: const Text(
+              'Create Account',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
           ),
         ),
       ],
@@ -753,11 +794,15 @@ class _AuthField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscure,
-          onChanged: onChanged,
+        Semantics(
+          textField: true,
+          label: hint,
+          hint: obscure ? 'Password field' : 'Enter your $hint',
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            obscureText: obscure,
+            onChanged: onChanged,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -789,6 +834,7 @@ class _AuthField extends StatelessWidget {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          ),
           ),
         ),
         if (errorText != null) ...[

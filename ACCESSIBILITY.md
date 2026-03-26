@@ -60,7 +60,14 @@ We built a **mode-based accessibility system** with 5 distinct modes:
 12. [Testing](#testing)
 13. [Best Practices](#best-practices)
 14. [Important Notes](#important-notes)
-15. [Future Enhancements](#future-enhancements)
+15. [Screen Reader Support](#screen-reader-support-semantic-labels)
+    - [Overview](#overview-1)
+    - [Implementation Status](#implementation-status)
+    - [Key Semantic Patterns](#key-semantic-patterns)
+    - [Semantic Guidelines](#semantic-guidelines)
+    - [Testing Screen Reader Support](#testing-screen-reader-support)
+    - [Common Semantic Widgets](#common-semantic-widgets)
+    - [Resources](#resources)
 16. [State Management Architecture](#state-management-architecture)
     - [BLoC Pattern Implementation](#bloc-pattern-implementation)
     - [Architecture Overview](#architecture-overview)
@@ -70,6 +77,7 @@ We built a **mode-based accessibility system** with 5 distinct modes:
     - [Implementation Details](#implementation-details)
     - [Migration from setState](#migration-from-setstate)
     - [For Other Developers](#for-other-developers)
+17. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -633,14 +641,166 @@ AlertDialog(
 
 ---
 
-## Future Enhancements
+## Screen Reader Support (Semantic Labels)
 
-- [ ] Voice control integration
-- [ ] Screen reader announcements
-- [ ] Sign language video overlays
-- [ ] Switch access navigation
-- [ ] Focus mode UI simplification
-- [ ] Haptic feedback for motor mode
+### Overview
+
+The app implements comprehensive semantic labels for screen reader compatibility (TalkBack on Android, VoiceOver on iOS). All 20+ screens have been enhanced with proper semantic annotations to ensure users with visual impairments can navigate and use the app effectively.
+
+### Implementation Status
+
+**Completed:**
+- Authentication screens (sign up, sign in, password reset, email verification)
+- Core navigation (bottom navigation bar with tab announcements)
+- Course discovery (search, filters, course cards with progress/bookmark status)
+- Mentorship hub (mentor cards, profiles, session booking)
+- Profile & settings (preferences, accessibility setup)
+- Skills management (skill cards, add/edit/delete operations)
+- Session management (upcoming/past sessions)
+
+### Key Semantic Patterns
+
+#### 1. Interactive Elements
+```dart
+// Buttons with labels and hints
+Semantics(
+  button: true,
+  label: 'Sign in to your account',
+  hint: 'Double tap to sign in',
+  child: ElevatedButton(...),
+)
+```
+
+#### 2. Form Fields
+```dart
+// Text fields with labels
+Semantics(
+  textField: true,
+  label: 'Search courses',
+  hint: 'Enter course name or category',
+  child: TextField(...),
+)
+```
+
+#### 3. Selection States
+```dart
+// Chips and toggles with selection announcements
+Semantics(
+  button: true,
+  selected: isSelected,
+  label: 'Digital Skills category',
+  hint: isSelected ? 'Currently selected' : 'Tap to filter courses',
+  child: ChoiceChip(...),
+)
+```
+
+#### 4. Dynamic Status
+```dart
+// Live regions for status updates
+Semantics(
+  label: 'Online now',
+  liveRegion: true,
+  child: OnlineBadge(...),
+)
+```
+
+#### 5. Complex Cards
+```dart
+// Course cards with comprehensive context
+Semantics(
+  button: true,
+  label: 'Flutter Development, Digital Skills, 26 minutes. In progress, 45 percent complete. Bookmarked.',
+  hint: 'Double tap to view course details',
+  child: CourseCard(...),
+)
+```
+
+#### 6. Password Toggles
+```dart
+// Password visibility with state-aware labels
+Semantics(
+  label: passwordVisible ? 'Hide password' : 'Show password',
+  hint: 'Double tap to toggle password visibility',
+  child: IconButton(...),
+)
+```
+
+### Semantic Guidelines
+
+**Do:**
+- Provide clear, concise labels that describe the element's purpose
+- Include contextual information (e.g., "Tab 1 of 4", "45% complete")
+- Announce selection states ("Currently selected", "Not selected")
+- Use hints to explain what happens when activated
+- Mark decorative elements with `ExcludeSemantics`
+- Use `liveRegion: true` for dynamic status updates
+
+**Don't:**
+- Duplicate visible text in semantic labels
+- Use overly verbose descriptions
+- Forget to announce state changes
+- Leave interactive elements without labels
+- Use technical jargon in labels
+
+### Testing Screen Reader Support
+
+**Android (TalkBack):**
+1. Settings → Accessibility → TalkBack → Enable
+2. Navigate with swipe gestures
+3. Double-tap to activate elements
+4. Verify all elements are announced clearly
+
+**iOS (VoiceOver):**
+1. Settings → Accessibility → VoiceOver → Enable
+2. Navigate with swipe gestures
+3. Double-tap to activate elements
+4. Verify all elements are announced clearly
+
+### Common Semantic Widgets
+
+```dart
+// Button
+Semantics(
+  button: true,
+  label: 'Descriptive label',
+  hint: 'What happens when tapped',
+  child: Widget(...),
+)
+
+// Image
+Semantics(
+  image: true,
+  label: 'Description of image content',
+  child: Image(...),
+)
+
+// Toggle/Switch
+Semantics(
+  toggled: isEnabled,
+  label: 'Feature name, ${isEnabled ? "enabled" : "disabled"}',
+  hint: 'Double tap to toggle',
+  child: Switch(...),
+)
+
+// Text field
+Semantics(
+  textField: true,
+  label: 'Field purpose',
+  hint: 'Input instructions',
+  child: TextField(...),
+)
+
+// Decorative element
+ExcludeSemantics(
+  child: DecorativeIcon(...),
+)
+```
+
+### Resources
+
+- [Flutter Semantics Widget](https://api.flutter.dev/flutter/widgets/Semantics-class.html)
+- [Flutter Accessibility Guide](https://docs.flutter.dev/development/accessibility-and-localization/accessibility)
+- [Screen Reader Testing](https://docs.flutter.dev/development/accessibility-and-localization/accessibility#screen-readers)
 
 ---
 
@@ -877,3 +1037,13 @@ BlocBuilder<FeatureBloc, FeatureState>(
   },
 )
 ```
+
+---
+
+## Future Enhancements
+
+- [ ] Voice control integration
+- [ ] Sign language video overlays
+- [ ] Switch access navigation
+- [ ] Focus mode UI simplification
+- [ ] Haptic feedback for motor mode

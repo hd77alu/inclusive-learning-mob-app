@@ -71,33 +71,59 @@ class _OutlookScreenState extends State<OutlookScreen>
             ),
 
             // Glowing "Start here!" button
-            AnimatedBuilder(
-              animation: _glowAnim,
-              builder: (_, _) => GestureDetector(
-                onTap: () => Navigator.pushNamed(context, '/signup'),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 64, vertical: 14),
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00D9D9),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00D9D9)
-                            .withValues(alpha: 0.45 + 0.45 * _glowAnim.value),
-                        blurRadius: 20 + 16 * _glowAnim.value,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Start here!',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: AnimatedBuilder(
+                animation: _glowAnim,
+                builder: (_, _) => Center(
+                  child: Semantics(
+                    button: true,
+                    label: 'Start here',
+                    hint: 'Double tap to sign up or sign in',
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
                         color: Colors.black,
-                        letterSpacing: 0.4,
+                        borderRadius: BorderRadius.circular(38),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/signup'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00D9D9),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF00D9D9)
+                                    .withValues(alpha: 0.45 + 0.45 * _glowAnim.value),
+                                blurRadius: 24 + 20 * _glowAnim.value,
+                                spreadRadius: 2,
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'Start here!',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

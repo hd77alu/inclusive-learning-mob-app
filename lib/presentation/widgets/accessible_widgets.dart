@@ -8,6 +8,7 @@ class AccessibleText extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final TextOverflow? overflow;
+  final String? semanticsLabel;
 
   const AccessibleText(
     this.text, {
@@ -16,6 +17,7 @@ class AccessibleText extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.overflow,
+    this.semanticsLabel,
   });
 
   @override
@@ -23,12 +25,15 @@ class AccessibleText extends StatelessWidget {
     final a11y = AccessibilityProvider.of(context);
     final adjustedStyle = style != null ? a11y.adjustTextStyle(style!) : null;
 
-    return Text(
-      text,
-      style: adjustedStyle,
-      textAlign: textAlign,
-      maxLines: maxLines,
-      overflow: overflow,
+    return Semantics(
+      label: semanticsLabel ?? text,
+      child: Text(
+        text,
+        style: adjustedStyle,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+      ),
     );
   }
 }
@@ -38,28 +43,38 @@ class AccessibleButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onPressed;
   final ButtonStyle? style;
+  final String? semanticsLabel;
+  final String? semanticsHint;
 
   const AccessibleButton({
     super.key,
     required this.child,
     required this.onPressed,
     this.style,
+    this.semanticsLabel,
+    this.semanticsHint,
   });
 
   @override
   Widget build(BuildContext context) {
     final a11y = AccessibilityProvider.of(context);
     
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: style?.copyWith(
-        minimumSize: WidgetStateProperty.all(
-          Size(a11y.minTouchTarget, a11y.minTouchTarget),
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticsLabel,
+      hint: semanticsHint,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: style?.copyWith(
+          minimumSize: WidgetStateProperty.all(
+            Size(a11y.minTouchTarget, a11y.minTouchTarget),
+          ),
+        ) ?? ElevatedButton.styleFrom(
+          minimumSize: Size(a11y.minTouchTarget, a11y.minTouchTarget),
         ),
-      ) ?? ElevatedButton.styleFrom(
-        minimumSize: Size(a11y.minTouchTarget, a11y.minTouchTarget),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -71,6 +86,7 @@ class AccessibleIconButton extends StatelessWidget {
   final Color? color;
   final double? size;
   final String? tooltip;
+  final String? semanticsLabel;
 
   const AccessibleIconButton({
     super.key,
@@ -79,20 +95,27 @@ class AccessibleIconButton extends StatelessWidget {
     this.color,
     this.size,
     this.tooltip,
+    this.semanticsLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final a11y = AccessibilityProvider.of(context);
     
-    return IconButton(
-      icon: Icon(icon, size: size),
-      onPressed: onPressed,
-      color: color,
-      tooltip: tooltip,
-      constraints: BoxConstraints(
-        minWidth: a11y.minTouchTarget,
-        minHeight: a11y.minTouchTarget,
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticsLabel ?? tooltip,
+      hint: 'Double tap to activate',
+      child: IconButton(
+        icon: Icon(icon, size: size),
+        onPressed: onPressed,
+        color: color,
+        tooltip: tooltip,
+        constraints: BoxConstraints(
+          minWidth: a11y.minTouchTarget,
+          minHeight: a11y.minTouchTarget,
+        ),
       ),
     );
   }
