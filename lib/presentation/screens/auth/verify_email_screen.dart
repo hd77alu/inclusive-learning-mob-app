@@ -186,45 +186,55 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                   const SizedBox(height: 28),
 
                   // ── "I've verified" button ──
-                  ElevatedButton.icon(
-                    onPressed: isLoading ? null : _checkNow,
-                    icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: const Text(
-                      "I've verified my email",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                  Semantics(
+                    button: true,
+                    label: 'Check email verification',
+                    hint: 'Double tap to verify if email is confirmed',
+                    child: ElevatedButton.icon(
+                      onPressed: isLoading ? null : _checkNow,
+                      icon: const Icon(Icons.check_circle_outline, size: 18),
+                      label: const Text(
+                        "I've verified my email",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: teal,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: teal,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
                       ),
-                      elevation: 0,
                     ),
                   ),
                   const SizedBox(height: 14),
 
                   // ── Resend button ──
-                  OutlinedButton.icon(
-                    onPressed:
-                        (isLoading || _cooldownSeconds > 0) ? null : _resendEmail,
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: Text(
-                      _cooldownSeconds > 0
-                          ? 'Resend in ${_cooldownSeconds}s'
-                          : 'Resend verification email',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: teal,
-                      side: const BorderSide(color: teal),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  Semantics(
+                    button: true,
+                    label: _cooldownSeconds > 0 ? 'Resend in $_cooldownSeconds seconds' : 'Resend verification email',
+                    hint: _cooldownSeconds > 0 ? 'Wait to resend' : 'Double tap to resend email',
+                    child: OutlinedButton.icon(
+                      onPressed:
+                          (isLoading || _cooldownSeconds > 0) ? null : _resendEmail,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(
+                        _cooldownSeconds > 0
+                            ? 'Resend in ${_cooldownSeconds}s'
+                            : 'Resend verification email',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: teal,
+                        side: const BorderSide(color: teal),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
@@ -234,11 +244,16 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                   const Divider(color: Colors.white12),
                   const SizedBox(height: 12),
                   Center(
-                    child: TextButton(
-                      onPressed: _signOut,
-                      child: const Text(
-                        'Use a different account — Sign out',
-                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                    child: Semantics(
+                      button: true,
+                      label: 'Sign out and use different account',
+                      hint: 'Double tap to sign out',
+                      child: TextButton(
+                        onPressed: _signOut,
+                        child: const Text(
+                          'Use a different account — Sign out',
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
                       ),
                     ),
                   ),

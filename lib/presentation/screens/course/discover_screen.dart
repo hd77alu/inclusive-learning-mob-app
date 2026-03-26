@@ -99,9 +99,14 @@ class _DiscoverViewState extends State<_DiscoverView> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.maybePop(context),
+          Semantics(
+            button: true,
+            label: 'Go back',
+            hint: 'Double tap to return to previous screen',
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.maybePop(context),
+            ),
           ),
           const Expanded(
             child: Column(
@@ -134,28 +139,37 @@ class _DiscoverViewState extends State<_DiscoverView> {
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (q) => context.read<DiscoverBloc>().add(SearchCourses(q)),
-        decoration: InputDecoration(
-          hintText: 'Search courses...',
-          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    context.read<DiscoverBloc>().add(SearchCourses(''));
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+      child: Semantics(
+        textField: true,
+        label: 'Search courses',
+        hint: 'Enter course name or category',
+        child: TextField(
+          controller: _searchController,
+          onChanged: (q) => context.read<DiscoverBloc>().add(SearchCourses(q)),
+          decoration: InputDecoration(
+            hintText: 'Search courses...',
+            hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? Semantics(
+                    button: true,
+                    label: 'Clear search',
+                    child: IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        context.read<DiscoverBloc>().add(SearchCourses(''));
+                      },
+                    ),
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
       ),
@@ -177,23 +191,29 @@ class _DiscoverViewState extends State<_DiscoverView> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
               final isSelected = _categories[i] == selected;
-              return ChoiceChip(
-                label: Text(_categories[i]),
+              return Semantics(
+                button: true,
                 selected: isSelected,
-                onSelected: (_) => context.read<DiscoverBloc>().add(
-                      FilterCourses(_categories[i]),
+                label: '${_categories[i]} category',
+                hint: isSelected ? 'Currently selected' : 'Tap to filter courses',
+                child: ChoiceChip(
+                  label: Text(_categories[i]),
+                  selected: isSelected,
+                  onSelected: (_) => context.read<DiscoverBloc>().add(
+                        FilterCourses(_categories[i]),
+                      ),
+                  selectedColor: teal,
+                  backgroundColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.grey.shade700,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12 * a11y.fontSizeMultiplier,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: isSelected ? teal : Colors.grey.shade300,
                     ),
-                selectedColor: teal,
-                backgroundColor: Colors.white,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.black : Colors.grey.shade700,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12 * a11y.fontSizeMultiplier,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected ? teal : Colors.grey.shade300,
                   ),
                 ),
               );
@@ -369,16 +389,24 @@ class _CourseCard extends StatelessWidget {
     final iconColor = Color(course.iconColorValue);
     final a11y = AccessibilityProvider.of(context);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showCourseDialog(context, progressVal),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final semanticLabel = '${course.title}, ${course.category}, ${course.duration}. '
+        '${isCompleted ? "Completed" : hasStarted ? "In progress, ${(progressVal * 100).round()} percent complete" : "Not started"}. '
+        '${isBookmarked ? "Bookmarked" : "Not bookmarked"}.';
+
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      hint: 'Double tap to view course details',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showCourseDialog(context, progressVal),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Stack(
               children: [
                 Container(
@@ -515,8 +543,10 @@ class _CourseCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   const Divider(height: 1),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    alignment: WrapAlignment.center,
                     children: [
                       _actionBtn(
                         icon: hasStarted
@@ -548,7 +578,8 @@ class _CourseCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _badge(String label, Color bg, Color fg) {
@@ -773,49 +804,54 @@ class _BookmarkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        context.read<DiscoverBloc>().add(
-              ToggleCourseBookmark(course.id, isCurrentlyBookmarked: isBookmarked),
-            );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isBookmarked ? 'Bookmark removed' : 'Course saved!'),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isBookmarked
-              ? teal.withValues(alpha: 0.25)
-              : teal.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              size: 15,
-              color: teal,
-            ),
-            const SizedBox(width: 4),
-            AccessibleText(
-              isBookmarked ? 'Saved' : 'Save',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: teal,
+    return Semantics(
+      button: true,
+      label: isBookmarked ? 'Remove bookmark from ${course.title}' : 'Bookmark ${course.title}',
+      hint: 'Double tap to ${isBookmarked ? "remove" : "save"} course',
+      child: InkWell(
+        onTap: () {
+          context.read<DiscoverBloc>().add(
+                ToggleCourseBookmark(course.id, isCurrentlyBookmarked: isBookmarked),
+              );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isBookmarked ? 'Bookmark removed' : 'Course saved!'),
+              duration: const Duration(seconds: 1),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-          ],
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: isBookmarked
+                ? teal.withValues(alpha: 0.25)
+                : teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                size: 15,
+                color: teal,
+              ),
+              const SizedBox(width: 4),
+              AccessibleText(
+                isBookmarked ? 'Saved' : 'Save',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: teal,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

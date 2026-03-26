@@ -85,9 +85,14 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.maybePop(context),
+          Semantics(
+            button: true,
+            label: 'Go back',
+            hint: 'Double tap to return to previous screen',
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.maybePop(context),
+            ),
           ),
           const Expanded(
             child: Column(
@@ -120,28 +125,37 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) => setState(() {}),
-        decoration: InputDecoration(
-          hintText: 'Search mentors by specialty...',
-          hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {});
-                  },
-                )
-              : null,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+      child: Semantics(
+        textField: true,
+        label: 'Search mentors',
+        hint: 'Enter mentor name or specialty',
+        child: TextField(
+          controller: _searchController,
+          onChanged: (value) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Search mentors by specialty...',
+            hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? Semantics(
+                    button: true,
+                    label: 'Clear search',
+                    child: IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                    ),
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
       ),
@@ -159,22 +173,28 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final selected = _filters[i] == _selectedFilter;
-          return ChoiceChip(
-            label: Text(_filters[i]),
+          return Semantics(
+            button: true,
             selected: selected,
-            onSelected: (value) =>
-                setState(() => _selectedFilter = _filters[i]),
-            selectedColor: _teal,
-            backgroundColor: Colors.white,
-            labelStyle: TextStyle(
-              color: selected ? Colors.black : Colors.grey.shade700,
-              fontWeight: FontWeight.w600,
-              fontSize: 12 * a11y.fontSizeMultiplier,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: selected ? _teal : Colors.grey.shade300,
+            label: '${_filters[i]} filter',
+            hint: selected ? 'Currently selected' : 'Tap to filter mentors',
+            child: ChoiceChip(
+              label: Text(_filters[i]),
+              selected: selected,
+              onSelected: (value) =>
+                  setState(() => _selectedFilter = _filters[i]),
+              selectedColor: _teal,
+              backgroundColor: Colors.white,
+              labelStyle: TextStyle(
+                color: selected ? Colors.black : Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+                fontSize: 12 * a11y.fontSizeMultiplier,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: selected ? _teal : Colors.grey.shade300,
+                ),
               ),
             ),
           );
@@ -349,19 +369,25 @@ class _MentorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a11y = AccessibilityProvider.of(context);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MentorProfileScreen(mentor: mentor),
+    final semanticLabel = '${mentor.name}, ${mentor.role}, Rating ${mentor.rating} stars${mentor.isOnline ? ", Online now" : ""}${isBookmarked ? ", Bookmarked" : ""}';
+    
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      hint: 'Double tap to view mentor profile',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 2,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MentorProfileScreen(mentor: mentor),
+            ),
           ),
-        ),
-        child: Column(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Avatar banner with ONLINE badge
@@ -389,27 +415,31 @@ class _MentorCard extends StatelessWidget {
                   Positioned(
                     top: 10,
                     right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.circle, size: 7, color: Colors.white),
-                          SizedBox(width: 4),
-                          Text(
-                            'ONLINE NOW',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
+                    child: Semantics(
+                      label: 'Online now',
+                      liveRegion: true,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.circle, size: 7, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'ONLINE NOW',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -435,9 +465,12 @@ class _MentorCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Text(
-                        '⭐ ${mentor.rating}',
-                        style: const TextStyle(fontSize: 13),
+                      Semantics(
+                        label: 'Rating ${mentor.rating} stars',
+                        child: Text(
+                          '⭐ ${mentor.rating}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
                       ),
                     ],
                   ),
@@ -530,7 +563,8 @@ class _MentorCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   void _confirmAction(
@@ -579,28 +613,33 @@ class _MentorCard extends StatelessWidget {
     required String label,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: _teal.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 15, color: _teal),
-            const SizedBox(width: 4),
-            AccessibleText(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF00D4D4),
+    return Semantics(
+      button: true,
+      label: '$label ${mentor.name}',
+      hint: 'Double tap to $label',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: _teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 15, color: _teal),
+              const SizedBox(width: 4),
+              AccessibleText(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00D4D4),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -618,48 +657,53 @@ class _BookmarkButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        context.read<MentorshipBloc>().add(
-              ToggleBookmark(mentor.id, isCurrentlyBookmarked: isBookmarked),
-            );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isBookmarked ? 'Bookmark removed' : 'Mentor saved!',
-            ),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isBookmarked
-              ? _teal.withValues(alpha: 0.25)
-              : _teal.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              size: 15,
-              color: _teal,
-            ),
-            const SizedBox(width: 4),
-            AccessibleText(
-              isBookmarked ? 'Saved' : 'Save',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF00D4D4),
+    return Semantics(
+      button: true,
+      label: isBookmarked ? 'Remove bookmark from ${mentor.name}' : 'Bookmark ${mentor.name}',
+      hint: 'Double tap to ${isBookmarked ? "remove" : "save"} mentor',
+      child: InkWell(
+        onTap: () {
+          context.read<MentorshipBloc>().add(
+                ToggleBookmark(mentor.id, isCurrentlyBookmarked: isBookmarked),
+              );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isBookmarked ? 'Bookmark removed' : 'Mentor saved!',
               ),
+              duration: const Duration(seconds: 1),
+              behavior: SnackBarBehavior.floating,
             ),
-          ],
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: isBookmarked
+                ? _teal.withValues(alpha: 0.25)
+                : _teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                size: 15,
+                color: _teal,
+              ),
+              const SizedBox(width: 4),
+              AccessibleText(
+                isBookmarked ? 'Saved' : 'Save',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00D4D4),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

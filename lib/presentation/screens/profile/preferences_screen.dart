@@ -61,41 +61,55 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         color: isDarkMode ? const Color(0xFF112324) : null,
         child: ListView(
           children: [
-            SwitchListTile(
-              title: AccessibleText('Dark Mode', style: TextStyle(color: textColor)),
-              subtitle: AccessibleText('Enable dark theme', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
-              value: _localDarkMode ?? isDarkMode,
-              onChanged: (value) {
-                setState(() => _localDarkMode = value);
-                context.read<ThemeBloc>().add(ToggleTheme(value));
-              },
-              secondary: Icon(Icons.dark_mode, color: textColor),
+            Semantics(
+              toggled: _localDarkMode ?? isDarkMode,
+              label: 'Dark Mode, ${(_localDarkMode ?? isDarkMode) ? "enabled" : "disabled"}',
+              hint: 'Double tap to toggle dark theme',
+              child: SwitchListTile(
+                title: AccessibleText('Dark Mode', style: TextStyle(color: textColor)),
+                subtitle: AccessibleText('Enable dark theme', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+                value: _localDarkMode ?? isDarkMode,
+                onChanged: (value) {
+                  setState(() => _localDarkMode = value);
+                  context.read<ThemeBloc>().add(ToggleTheme(value));
+                },
+                secondary: Icon(Icons.dark_mode, color: textColor),
+              ),
             ),
-            SwitchListTile(
-              title: AccessibleText('Notifications', style: TextStyle(color: textColor)),
-              subtitle: AccessibleText('Enable push notifications', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
-              value: _notifications,
-              onChanged: _saveNotifications,
-              secondary: Icon(Icons.notifications, color: textColor),
+            Semantics(
+              toggled: _notifications,
+              label: 'Notifications, ${_notifications ? "enabled" : "disabled"}',
+              hint: 'Double tap to toggle push notifications',
+              child: SwitchListTile(
+                title: AccessibleText('Notifications', style: TextStyle(color: textColor)),
+                subtitle: AccessibleText('Enable push notifications', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+                value: _notifications,
+                onChanged: _saveNotifications,
+                secondary: Icon(Icons.notifications, color: textColor),
+              ),
             ),
-            ListTile(
-              leading: Icon(Icons.language, color: textColor),
-              title: AccessibleText('Language', style: TextStyle(color: textColor)),
-              subtitle: AccessibleText(_language, style: TextStyle(color: textColor)),
-                  trailing: DropdownButton<String>(
-                    value: _language,
-                    dropdownColor: isDarkMode ? const Color(0xFF112324) : null,
-                style: TextStyle(color: textColor),
-                items: const [
-                  DropdownMenuItem(value: 'English', child: Text('English')),
-                  DropdownMenuItem(value: 'French', child: Text('French')),
-                  DropdownMenuItem(value: 'Kinyarwanda', child: Text('Kinyarwanda')),
-                ],
-                    onChanged: (value) {
-                      if (value != null) _saveLanguage(value);
-                    },
+            Semantics(
+              label: 'Language, currently $_language',
+              hint: 'Tap to change language',
+              child: ListTile(
+                leading: Icon(Icons.language, color: textColor),
+                title: AccessibleText('Language', style: TextStyle(color: textColor)),
+                subtitle: AccessibleText(_language, style: TextStyle(color: textColor)),
+                    trailing: DropdownButton<String>(
+                      value: _language,
+                      dropdownColor: isDarkMode ? const Color(0xFF112324) : null,
+                  style: TextStyle(color: textColor),
+                  items: const [
+                    DropdownMenuItem(value: 'English', child: Text('English')),
+                    DropdownMenuItem(value: 'French', child: Text('French')),
+                    DropdownMenuItem(value: 'Kinyarwanda', child: Text('Kinyarwanda')),
+                  ],
+                      onChanged: (value) {
+                        if (value != null) _saveLanguage(value);
+                      },
+                    ),
                   ),
-                ),
+            ),
               ],
             ),
           ),

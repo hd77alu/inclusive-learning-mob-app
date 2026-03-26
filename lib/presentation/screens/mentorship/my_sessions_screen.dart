@@ -90,9 +90,14 @@ class _MySessionsScreenState extends State<MySessionsScreen>
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.maybePop(context),
+          Semantics(
+            button: true,
+            label: 'Go back',
+            hint: 'Double tap to return to previous screen',
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.maybePop(context),
+            ),
           ),
           const Expanded(
             child: Column(

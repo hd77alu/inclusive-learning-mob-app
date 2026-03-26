@@ -83,9 +83,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
+                    Semantics(
+                      button: true,
+                      label: 'Go back',
+                      hint: 'Double tap to return to sign in',
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.black),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
                     const Expanded(
                       child: Text(
@@ -160,45 +165,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           const SizedBox(height: 24),
 
                           // Submit button
-                          ElevatedButton(
-                            onPressed: isLoading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: teal,
-                              foregroundColor: Colors.black,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 15),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                          Semantics(
+                            button: true,
+                            label: 'Send password reset link',
+                            hint: 'Double tap to send reset email',
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: teal,
+                                foregroundColor: Colors.black,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
                               ),
-                              elevation: 0,
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.black,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Send Reset Link',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                             ),
-                            child: isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.black,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Send Reset Link',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
                           ),
                           const SizedBox(height: 20),
 
-                          Center(
-                            child: TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Back to Sign In',
-                                style: TextStyle(
-                                  color: teal,
-                                  fontWeight: FontWeight.w600,
+                          Semantics(
+                            button: true,
+                            label: 'Back to sign in',
+                            hint: 'Double tap to return to sign in screen',
+                            child: Center(
+                              child: TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text(
+                                  'Back to Sign In',
+                                  style: TextStyle(
+                                    color: teal,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
@@ -257,10 +272,14 @@ class _ResetField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.emailAddress,
-          onChanged: onChanged,
+        Semantics(
+          textField: true,
+          label: 'Email address for password reset',
+          hint: 'Enter your registered email address',
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.emailAddress,
+            onChanged: onChanged,
           style: const TextStyle(
             fontSize: 14,
             color: Colors.black87,
@@ -297,6 +316,7 @@ class _ResetField extends StatelessWidget {
               horizontal: 14,
               vertical: 14,
             ),
+          ),
           ),
         ),
         if (errorText != null) ...[
@@ -363,10 +383,14 @@ class _SuccessCard extends StatelessWidget {
               style: TextStyle(color: Colors.white38, fontSize: 11),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onBack,
+            Semantics(
+              button: true,
+              label: 'Back to sign in',
+              hint: 'Double tap to return to sign in screen',
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onBack,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: teal,
                   foregroundColor: Colors.black,
@@ -377,6 +401,7 @@ class _SuccessCard extends StatelessWidget {
                 child: const Text(
                   'Back to Sign In',
                   style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 ),
               ),
             ),

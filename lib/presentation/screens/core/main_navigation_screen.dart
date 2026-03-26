@@ -60,25 +60,65 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              activeIcon: Icon(Icons.explore),
+              icon: Semantics(
+                label: 'Discover courses',
+                hint: 'Tab 1 of 4',
+                selected: _currentIndex == 0,
+                child: const Icon(Icons.explore_outlined),
+              ),
+              activeIcon: Semantics(
+                label: 'Discover courses',
+                hint: 'Tab 1 of 4, currently selected',
+                selected: true,
+                child: const Icon(Icons.explore),
+              ),
               label: 'Discover',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.people_outline),
-              activeIcon: Icon(Icons.people),
+              icon: Semantics(
+                label: 'Mentorship hub',
+                hint: 'Tab 2 of 4',
+                selected: _currentIndex == 1,
+                child: const Icon(Icons.people_outline),
+              ),
+              activeIcon: Semantics(
+                label: 'Mentorship hub',
+                hint: 'Tab 2 of 4, currently selected',
+                selected: true,
+                child: const Icon(Icons.people),
+              ),
               label: 'Mentorship',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school),
+              icon: Semantics(
+                label: 'My skills',
+                hint: 'Tab 3 of 4',
+                selected: _currentIndex == 2,
+                child: const Icon(Icons.school_outlined),
+              ),
+              activeIcon: Semantics(
+                label: 'My skills',
+                hint: 'Tab 3 of 4, currently selected',
+                selected: true,
+                child: const Icon(Icons.school),
+              ),
               label: 'Skills',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
+              icon: Semantics(
+                label: 'My profile',
+                hint: 'Tab 4 of 4',
+                selected: _currentIndex == 3,
+                child: const Icon(Icons.person_outline),
+              ),
+              activeIcon: Semantics(
+                label: 'My profile',
+                hint: 'Tab 4 of 4, currently selected',
+                selected: true,
+                child: const Icon(Icons.person),
+              ),
               label: 'Profile',
             ),
           ],

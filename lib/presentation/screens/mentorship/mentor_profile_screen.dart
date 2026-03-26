@@ -110,20 +110,24 @@ class MentorProfileScreen extends StatelessWidget {
                         ),
                       ),
                       if (mentor.isOnline)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green),
-                          ),
-                          child: const AccessibleText(
-                            'Online',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                        Semantics(
+                          label: 'Currently online',
+                          liveRegion: true,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: const AccessibleText(
+                              'Online',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
@@ -143,27 +147,30 @@ class MentorProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Rating row
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      AccessibleText(
-                        '${mentor.rating}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
+                  Semantics(
+                    label: 'Rating ${mentor.rating} stars',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 18),
+                        const SizedBox(width: 4),
+                        AccessibleText(
+                          '${mentor.rating}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      AccessibleText(
-                        'rating',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: subtextColor,
+                        const SizedBox(width: 4),
+                        AccessibleText(
+                          'rating',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: subtextColor,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 20),
@@ -226,26 +233,31 @@ class MentorProfileScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Book Session button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showBookSessionDialog(builderContext),
-                      icon: const Icon(Icons.calendar_today, size: 18),
-                      label: const AccessibleText(
-                        'Book a Session',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
+                  Semantics(
+                    button: true,
+                    label: 'Book a session with ${mentor.name}',
+                    hint: 'Double tap to open booking dialog',
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showBookSessionDialog(builderContext),
+                        icon: const Icon(Icons.calendar_today, size: 18),
+                        label: const AccessibleText(
+                          'Book a Session',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _teal,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _teal,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 0,
                       ),
                     ),
                   ),
@@ -253,32 +265,37 @@ class MentorProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Message button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('Messaging ${mentor.name} — coming soon!'),
-                            behavior: SnackBarBehavior.floating,
+                  Semantics(
+                    button: true,
+                    label: 'Send message to ${mentor.name}',
+                    hint: 'Double tap to send message',
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('Messaging ${mentor.name} — coming soon!'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.message_outlined, size: 18),
+                        label: const AccessibleText(
+                          'Send Message',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.message_outlined, size: 18),
-                      label: const AccessibleText(
-                        'Send Message',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _teal,
-                        side: const BorderSide(color: _teal),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _teal,
+                          side: const BorderSide(color: _teal),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                         ),
                       ),
                     ),
@@ -305,38 +322,42 @@ class MentorProfileScreen extends StatelessWidget {
           final cardColor = isDark ? const Color(0xFF1A2426) : Colors.white;
           final subtextColor = isDark ? Colors.white70 : Colors.grey.shade500;
           
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                AccessibleText(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF00D4D4),
+          return Semantics(
+            label: '$value $label',
+            hint: 'Mentor statistics',
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 4),
-                AccessibleText(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: subtextColor,
+                ],
+              ),
+              child: Column(
+                children: [
+                  AccessibleText(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF00D4D4),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  AccessibleText(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: subtextColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -404,9 +425,13 @@ class MentorProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                InkWell(
-                  onTap: () async {
-                    final picked = await showDatePicker(
+                Semantics(
+                  button: true,
+                  label: 'Choose date for session',
+                  hint: 'Double tap to open date picker',
+                  child: InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
                       context: context,
                       initialDate: DateTime.now().add(const Duration(days: 1)),
                       firstDate: DateTime.now(),
@@ -422,12 +447,12 @@ class MentorProfileScreen extends StatelessWidget {
                           child: child!,
                         );
                       },
-                    );
-                    if (picked != null) {
-                      setDialogState(() => selectedDate = picked);
-                    }
-                  },
-                  child: Container(
+                      );
+                      if (picked != null) {
+                        setDialogState(() => selectedDate = picked);
+                      }
+                    },
+                    child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     decoration: BoxDecoration(
                       color: fieldBg,
@@ -459,6 +484,7 @@ class MentorProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
                 const SizedBox(height: 16),
                 Text(
                   'Preferred time slot',
@@ -478,17 +504,23 @@ class MentorProfileScreen extends StatelessWidget {
                     'Evening (6pm - 9pm)',
                   ].map((slot) {
                     final isSelected = selectedTime == slot;
-                    return ChoiceChip(
-                      label: Text(slot, style: TextStyle(fontSize: 11 * a11y.fontSizeMultiplier)),
+                    return Semantics(
+                      button: true,
                       selected: isSelected,
-                      onSelected: (value) => setDialogState(() => selectedTime = slot),
-                      selectedColor: _teal,
-                      backgroundColor: fieldBg,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.black : textColor,
-                        fontWeight: FontWeight.w600,
+                      label: slot,
+                      hint: isSelected ? 'Currently selected' : 'Tap to select time slot',
+                      child: ChoiceChip(
+                        label: Text(slot, style: TextStyle(fontSize: 11 * a11y.fontSizeMultiplier)),
+                        selected: isSelected,
+                        onSelected: (value) => setDialogState(() => selectedTime = slot),
+                        selectedColor: _teal,
+                        backgroundColor: fieldBg,
+                        labelStyle: TextStyle(
+                          color: isSelected ? Colors.black : textColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        side: BorderSide.none,
                       ),
-                      side: BorderSide.none,
                     );
                   }).toList(),
                 ),
