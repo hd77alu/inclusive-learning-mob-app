@@ -467,9 +467,10 @@ class _InnerScreenState extends State<_InnerScreen> {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // ── Status bar (punch-hole)
           Container(
             color: const Color(0xFFF5F9FC),
@@ -610,6 +611,7 @@ class _InnerScreenState extends State<_InnerScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -1,0 +1,634 @@
+# Accessibility Features Implementation Guide
+
+## Goal
+
+Create an inclusive mobile learning platform that adapts to the diverse needs of users with disabilities in Rwanda. The app should provide personalized accessibility experiences for users with visual, auditory, motor, and cognitive differences without compromising the experience for users who don't need accessibility features.
+
+## Problem We Solved
+
+Traditional mobile apps use a one-size-fits-all approach that creates barriers for users with disabilities:
+- **Visual impairments**: Small text and low contrast make content unreadable
+- **Hearing impairments**: Audio content without captions excludes deaf users
+- **Motor impairments**: Small touch targets are difficult to tap accurately
+- **Cognitive differences**: Complex animations and cluttered interfaces cause confusion
+
+We needed a solution that:
+1. Adapts the UI based on user needs
+2. Doesn't break existing functionality
+3. Is easy for developers to implement
+4. Provides a seamless experience across all modes
+
+## How We Implemented It
+
+We built a **mode-based accessibility system** with 5 distinct modes:
+
+1. **Architecture**:
+   - `AccessibilityService`: Centralized service that provides UI adjustments (font sizes, touch targets, colors, animations) based on the selected mode
+   - `AccessibilityProvider`: InheritedWidget that makes accessibility settings available throughout the widget tree
+   - `Accessible Widgets`: Pre-built widgets (AccessibleText, AccessibleButton, etc.) that automatically adjust based on the current mode
+
+2. **User Flow**:
+   - User selects their accessibility mode in Profile → Accessibility
+   - Preference is saved to Firestore
+   - App automatically loads the preference on startup
+   - All accessible widgets adjust their behavior based on the selected mode
+
+3. **Key Design Decisions**:
+   - **Default mode = no changes**: Ensures existing UI remains unchanged for users who don't need accessibility features
+   - **Opt-in approach**: Only widgets explicitly using accessible components are affected
+   - **Graceful fallback**: If preference loading fails, app uses default mode
+   - **Non-breaking**: Developers can gradually adopt accessible widgets without breaking existing code
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [What's Implemented](#whats-implemented)
+3. [Quick Start](#quick-start)
+   - [Use Accessible Widgets](#use-accessible-widgets-recommended)
+   - [Manual Adjustments](#manual-adjustments)
+4. [How It Works](#how-it-works)
+   - [Automatic Loading](#1-automatic-loading)
+   - [Global Access](#2-global-access)
+   - [Automatic Adjustments](#3-automatic-adjustments)
+5. [Mode Adjustments Reference](#mode-adjustments-reference)
+6. [Mode-Specific Features](#mode-specific-features)
+7. [Usage Examples](#usage-examples)
+8. [Before & After Example](#before--after-example)
+9. [Common Patterns](#common-patterns)
+10. [Material Component Text](#material-component-text)
+11. [Where to Apply](#where-to-apply)
+12. [Testing](#testing)
+13. [Best Practices](#best-practices)
+14. [Important Notes](#important-notes)
+15. [Future Enhancements](#future-enhancements)
+
+---
+
+## Overview
+
+The app supports 5 accessibility modes that automatically adjust the UI:
+- **Default**: Standard UI (no changes)
+- **Visual**: Larger fonts, high contrast, screen reader support
+- **Auditory**: Captions, sign language indicators
+- **Motor**: Larger touch targets, voice control
+- **Cognitive**: Simplified navigation, reduced animations
+
+---
+
+## What's Implemented
+
+1. **Accessibility Service** (`lib/data/services/accessibility_service.dart`)
+   - Provides UI adjustments based on selected mode
+   - Font sizes, touch targets, colors, animations
+
+2. **Accessibility Provider** (`lib/presentation/widgets/accessibility_provider.dart`)
+   - Makes settings available throughout the app
+   - Automatic loading on app startup
+
+3. **Accessible Widgets** (`lib/presentation/widgets/accessible_widgets.dart`)
+   - `AccessibleText` - Auto-adjusts font size
+   - `AccessibleButton` - Larger touch targets
+   - `AccessibleIconButton` - Accessible icon buttons
+   - `AccessibleAnimatedContainer` - Respects animation preferences
+
+4. **Main App Integration** (`lib/main.dart`)
+   - Loads preference on startup
+   - Wraps app with AccessibilityProvider
+
+5. **Setup Screen** (`lib/presentation/screens/accessibility/accessibility_setup_screen.dart`)
+   - Professional UI showing current mode with features
+   - Reloads app after saving preference
+
+---
+
+## Quick Start
+
+### Use Accessible Widgets (Recommended)
+
+```dart
+// Instead of Text
+AccessibleText('Hello', style: TextStyle(fontSize: 14))
+
+// Instead of ElevatedButton
+AccessibleButton(onPressed: () {}, child: Text('Click'))
+
+// Instead of IconButton
+AccessibleIconButton(icon: Icons.add, onPressed: () {})
+
+// Instead of AnimatedContainer
+AccessibleAnimatedContainer(duration: Duration(milliseconds: 300), child: ...)
+```
+
+### Manual Adjustments
+
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+// Adjust text style
+Text('Hello', style: a11y.adjustTextStyle(TextStyle(fontSize: 14)))
+
+// Get touch target size
+Container(
+  constraints: BoxConstraints(
+    minWidth: a11y.minTouchTarget,
+    minHeight: a11y.minTouchTarget,
+  ),
+)
+
+// Check mode flags
+if (a11y.showCaptions) { /* Show captions */ }
+if (a11y.disableAnimations) { /* Skip animation */ }
+```
+
+---
+
+## How It Works
+
+### 1. Automatic Loading
+The accessibility preference is loaded automatically when the app starts in `main.dart`:
+```dart
+// Loads user's saved preference from Firestore
+_loadAccessibilityPreference()
+```
+
+### 2. Global Access
+Any widget can access accessibility settings:
+```dart
+final a11y = AccessibilityProvider.of(context);
+```
+
+### 3. Automatic Adjustments
+Use the provided accessible widgets for automatic adjustments:
+
+#### AccessibleText
+```dart
+// Automatically adjusts font size based on mode
+AccessibleText(
+  'Hello World',
+  style: TextStyle(fontSize: 14),
+)
+```
+
+#### AccessibleButton
+```dart
+// Larger touch targets in motor mode
+AccessibleButton(
+  onPressed: () {},
+  child: Text('Click Me'),
+)
+```
+
+#### AccessibleIconButton
+```dart
+// Larger touch targets for icons
+AccessibleIconButton(
+  icon: Icons.settings,
+  onPressed: () {},
+  tooltip: 'Settings',
+)
+```
+
+#### AccessibleAnimatedContainer
+```dart
+// Respects cognitive mode (reduced/no animations)
+AccessibleAnimatedContainer(
+  duration: Duration(milliseconds: 300),
+  color: Colors.blue,
+  child: Text('Animated'),
+)
+```
+
+---
+
+## Mode Adjustments Reference
+
+| Feature | Default | Visual | Auditory | Motor | Cognitive |
+|---------|---------|--------|----------|-------|-----------|
+| Font Size | 1.0x | 1.3x | 1.0x | 1.0x | 1.15x |
+| Touch Target | 48px | 48px | 48px | 56px | 48px |
+| High Contrast | No | Yes | No | No | No |
+| Animations | Full | Full | Full | Full | 50% / Off |
+| Captions | No | No | Yes | No | No |
+| Voice Control | No | No | No | Yes | No |
+
+---
+
+## Mode-Specific Features
+
+### Visual Mode
+- Font size: 1.3x larger
+- High contrast colors
+- Screen reader enabled
+- Increased line height (1.5)
+- Bold text (FontWeight.w600)
+
+### Auditory Mode
+- Show captions indicator
+- Sign language support flag
+- Visual feedback for audio cues
+
+### Motor Mode
+- Touch targets: 56x56 (vs 48x48)
+- Larger button padding (+4px)
+- Voice control enabled
+- Switch access support
+
+### Cognitive Mode
+- Font size: 1.15x larger
+- Animations reduced by 50%
+- Simplified navigation
+- Increased line height (1.6)
+- Focus mode enabled
+
+---
+
+## Usage Examples
+
+### Example 1: Accessible Card
+```dart
+Widget buildCard() {
+  final a11y = AccessibilityProvider.of(context);
+  
+  return AccessibleAnimatedContainer(
+    duration: Duration(milliseconds: 300),
+    padding: EdgeInsets.all(16),
+    child: Column(
+      children: [
+        AccessibleText(
+          'Card Title',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        AccessibleButton(
+          onPressed: () {},
+          child: Text('Action'),
+        ),
+      ],
+    ),
+  );
+}
+```
+
+### Example 2: Conditional Features
+```dart
+Widget buildVideoPlayer() {
+  final a11y = AccessibilityProvider.of(context);
+  
+  return Stack(
+    children: [
+      VideoPlayer(...),
+      
+      // Show captions in auditory mode
+      if (a11y.showCaptions)
+        Positioned(
+          bottom: 20,
+          child: CaptionsWidget(),
+        ),
+    ],
+  );
+}
+```
+
+### Example 3: Simplified Navigation
+```dart
+Widget buildNavigation() {
+  final a11y = AccessibilityProvider.of(context);
+  
+  final items = [
+    'Home',
+    'Courses',
+    'Profile',
+    if (!a11y.simplifiedNavigation) 'Settings',
+    if (!a11y.simplifiedNavigation) 'Help',
+  ];
+  
+  return BottomNavigationBar(items: ...);
+}
+```
+
+### Example 4: Font Sizes
+```dart
+final a11y = AccessibilityProvider.of(context);
+Text(
+  'Custom text',
+  style: a11y.adjustTextStyle(TextStyle(fontSize: 16)),
+)
+```
+
+### Example 5: Colors (High Contrast)
+```dart
+final a11y = AccessibilityProvider.of(context);
+final isDark = Theme.of(context).brightness == Brightness.dark;
+Color adjustedColor = a11y.getContrastColor(Colors.blue, isDark: isDark);
+```
+
+### Example 6: Touch Targets
+```dart
+final a11y = AccessibilityProvider.of(context);
+Container(
+  constraints: BoxConstraints(
+    minWidth: a11y.minTouchTarget,  // 56 in motor mode, 48 otherwise
+    minHeight: a11y.minTouchTarget,
+  ),
+  child: Icon(Icons.add),
+)
+```
+
+### Example 7: Animations
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+// Adjust duration
+AnimatedContainer(
+  duration: a11y.getAnimationDuration(Duration(milliseconds: 300)),
+  ...
+)
+
+// Or disable completely
+if (!a11y.disableAnimations) {
+  // Show animation
+}
+```
+
+### Example 8: Button Padding
+```dart
+final a11y = AccessibilityProvider.of(context);
+ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    padding: a11y.getButtonPadding(EdgeInsets.all(12)),
+  ),
+  ...
+)
+```
+
+---
+
+## Before & After Example
+
+### Before (Standard Widget)
+
+```dart
+Widget buildCard() {
+  return AnimatedContainer(
+    duration: Duration(milliseconds: 300),
+    padding: EdgeInsets.all(16),
+    child: Column(
+      children: [
+        Text(
+          'Course Title',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 12),
+        Text(
+          'Course description goes here',
+          style: TextStyle(fontSize: 14),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {},
+          child: Text('Enroll Now'),
+        ),
+        SizedBox(height: 8),
+        IconButton(
+          icon: Icon(Icons.bookmark_border),
+          onPressed: () {},
+        ),
+      ],
+    ),
+  );
+}
+```
+
+### After (Accessible Widgets)
+
+```dart
+Widget buildCard() {
+  return AccessibleAnimatedContainer(
+    duration: Duration(milliseconds: 300),
+    padding: EdgeInsets.all(16),
+    child: Column(
+      children: [
+        AccessibleText(
+          'Course Title',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 12),
+        AccessibleText(
+          'Course description goes here',
+          style: TextStyle(fontSize: 14),
+        ),
+        SizedBox(height: 16),
+        AccessibleButton(
+          onPressed: () {},
+          child: Text('Enroll Now'),
+        ),
+        SizedBox(height: 8),
+        AccessibleIconButton(
+          icon: Icons.bookmark_border,
+          onPressed: () {},
+          tooltip: 'Bookmark course',
+        ),
+      ],
+    ),
+  );
+}
+```
+
+### What Changed?
+
+1. `AnimatedContainer` → `AccessibleAnimatedContainer`
+   - Respects cognitive mode (reduced/no animations)
+
+2. `Text` → `AccessibleText`
+   - Auto-adjusts font size in visual/cognitive modes
+   - Increases line height for readability
+
+3. `ElevatedButton` → `AccessibleButton`
+   - Larger touch targets in motor mode (56x56 vs 48x48)
+
+4. `IconButton` → `AccessibleIconButton`
+   - Larger touch targets in motor mode
+   - Better tooltip support for screen readers
+
+### Result
+
+#### Default Mode
+- Looks exactly the same as before ✓
+
+#### Visual Mode
+- Title: 18px → 23.4px (1.3x)
+- Description: 14px → 18.2px (1.3x)
+- High contrast colors
+- Bold text for better readability
+
+#### Motor Mode
+- Button: 48x48 → 56x56 touch target
+- Icon: 48x48 → 56x56 touch target
+- Easier to tap
+
+#### Cognitive Mode
+- Title: 18px → 20.7px (1.15x)
+- Description: 14px → 16.1px (1.15x)
+- Animation: 300ms → 150ms (50% faster)
+- Increased line spacing
+
+---
+
+## Common Patterns
+
+### Pattern 1: Conditional Features
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+if (a11y.showCaptions) {
+  // Show caption indicator
+  Icon(Icons.closed_caption, color: Colors.white)
+}
+```
+
+### Pattern 2: Adjusted Spacing
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+SizedBox(
+  height: a11y.mode == 'visual' ? 20 : 12,
+)
+```
+
+### Pattern 3: Simplified UI
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+if (!a11y.simplifiedNavigation) {
+  // Show advanced options
+  AdvancedSettingsButton()
+}
+```
+
+---
+
+## Material Component Text
+
+**Important**: Text widgets inside Material components (Chip, ChoiceChip, buttons, tabs, dialogs) don't automatically inherit accessibility settings from `AccessibleText` wrapper.
+
+### Solution: Apply font multiplier directly
+
+```dart
+final a11y = AccessibilityProvider.of(context);
+
+// For Chips
+ChoiceChip(
+  label: Text('Category'),
+  labelStyle: TextStyle(
+    fontSize: 12 * a11y.fontSizeMultiplier,
+    fontWeight: FontWeight.w600,
+  ),
+)
+
+// For Tab labels
+TabBar(
+  labelStyle: TextStyle(
+    fontSize: 14 * a11y.fontSizeMultiplier,
+    fontWeight: FontWeight.w700,
+  ),
+  tabs: [...]
+)
+
+// For Dialog text
+AlertDialog(
+  title: Text(
+    'Title',
+    style: TextStyle(fontSize: 16 * a11y.fontSizeMultiplier),
+  ),
+  content: Text(
+    'Content',
+    style: TextStyle(fontSize: 13 * a11y.fontSizeMultiplier),
+  ),
+)
+```
+
+---
+
+## Where to Apply
+
+### High Priority (Apply First)
+- ✅ Buttons and interactive elements
+- ✅ Text content (headings, body text)
+- ✅ Navigation elements
+- ✅ Form inputs
+
+### Medium Priority
+- ✅ Cards and containers
+- ✅ Animations and transitions
+- ✅ Icons and images
+- ✅ Chips and tags
+
+### Low Priority
+- 🔵 Decorative elements
+- 🔵 Background animations
+- 🔵 Non-critical UI
+
+---
+
+## Testing
+
+### Testing Different Modes
+
+1. Go to Profile → Accessibility
+2. Select a mode (Visual, Auditory, Motor, or Cognitive)
+3. Save preference
+4. App reloads with new settings applied
+
+### Testing Checklist
+
+- [ ] Test all 5 modes (Default, Visual, Auditory, Motor, Cognitive)
+- [ ] Verify text is readable in Visual mode
+- [ ] Check touch targets are larger in Motor mode
+- [ ] Confirm animations are reduced in Cognitive mode
+- [ ] Ensure default mode looks unchanged
+- [ ] Test Material component text (chips, tabs, dialogs)
+
+---
+
+## Best Practices
+
+1. **Use Accessible Widgets**: Prefer `AccessibleText`, `AccessibleButton`, etc.
+2. **Check Mode Flags**: Use `a11y.showCaptions`, `a11y.voiceControlEnabled`, etc.
+3. **Respect Animations**: Always check `a11y.disableAnimations`
+4. **Test All Modes**: Verify UI works in all 5 modes
+5. **Semantic Labels**: Add tooltips and semantic labels for screen readers
+6. **Material Components**: Apply font multipliers directly to Material component text
+7. **Start Small**: Update one screen at a time
+8. **Test Immediately**: Check all 5 modes after each change
+9. **Keep It Simple**: Don't over-engineer
+10. **Document**: Note any custom implementations
+
+---
+
+## Important Notes
+
+1. **Non-Breaking**: Default mode = current UI (no changes)
+2. **Opt-In**: Only widgets you update will have adjustments
+3. **Graceful**: If preference fails to load, uses default mode
+4. **Testable**: Change mode in Profile → Accessibility
+5. **Material Components**: Need explicit font multipliers (see [Material Component Text](#material-component-text))
+
+---
+
+## Future Enhancements
+
+- [ ] Voice control integration
+- [ ] Screen reader announcements
+- [ ] Sign language video overlays
+- [ ] Switch access navigation
+- [ ] Focus mode UI simplification
+- [ ] Haptic feedback for motor mode

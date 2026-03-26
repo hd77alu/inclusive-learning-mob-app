@@ -5,6 +5,8 @@ import 'mentor_profile_screen.dart';
 import '/blocs/mentorship_bloc.dart';
 import '/data/services/firestore_service.dart';
 import '/data/models/mentor_model.dart';
+import '/presentation/widgets/accessible_widgets.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 
 class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});
@@ -90,7 +92,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
           const Expanded(
             child: Column(
               children: [
-                Text(
+                AccessibleText(
                   'Inclusive Learning Platform',
                   style: TextStyle(
                     fontSize: 11,
@@ -98,7 +100,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
                     color: Colors.black54,
                   ),
                 ),
-                Text(
+                AccessibleText(
                   'Mentorship Hub',
                   style: TextStyle(
                     fontSize: 16,
@@ -147,6 +149,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
   }
 
   Widget _buildFilterChips() {
+    final a11y = AccessibilityProvider.of(context);
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -166,7 +169,7 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
             labelStyle: TextStyle(
               color: selected ? Colors.black : Colors.grey.shade700,
               fontWeight: FontWeight.w600,
-              fontSize: 12,
+              fontSize: 12 * a11y.fontSizeMultiplier,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
@@ -345,6 +348,7 @@ class _MentorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a11y = AccessibilityProvider.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -471,8 +475,8 @@ class _MentorCard extends StatelessWidget {
                           .map(
                             (tag) => Chip(
                               label: Text(tag),
-                              labelStyle: const TextStyle(
-                                fontSize: 10,
+                              labelStyle: TextStyle(
+                                fontSize: 10 * a11y.fontSizeMultiplier,
                                 fontWeight: FontWeight.w600,
                               ),
                               backgroundColor: _teal.withValues(alpha: 0.12),
@@ -588,7 +592,7 @@ class _MentorCard extends StatelessWidget {
           children: [
             Icon(icon, size: 15, color: _teal),
             const SizedBox(width: 4),
-            Text(
+            AccessibleText(
               label,
               style: const TextStyle(
                 fontSize: 11,
@@ -647,7 +651,7 @@ class _BookmarkButton extends StatelessWidget {
               color: _teal,
             ),
             const SizedBox(width: 4),
-            Text(
+            AccessibleText(
               isBookmarked ? 'Saved' : 'Save',
               style: const TextStyle(
                 fontSize: 11,

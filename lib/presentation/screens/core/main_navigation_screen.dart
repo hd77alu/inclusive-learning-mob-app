@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 import '../course/discover_screen.dart';
 import '../mentorship/mentorship_hub_screen.dart';
 import '../skills/my_skills_screen.dart';
@@ -26,6 +27,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final a11y = AccessibilityProvider.of(context);
+    
+    // Adjust font sizes based on accessibility mode
+    final selectedFontSize = 12.0 * a11y.fontSizeMultiplier;
+    final unselectedFontSize = 11.0 * a11y.fontSizeMultiplier;
     
     return Scaffold(
       body: IndexedStack(
@@ -49,8 +55,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           backgroundColor: isDark ? const Color(0xFF1A2426) : Colors.white,
           selectedItemColor: _teal,
           unselectedItemColor: Colors.grey.shade500,
-          selectedFontSize: 12,
-          unselectedFontSize: 11,
+          selectedFontSize: selectedFontSize,
+          unselectedFontSize: unselectedFontSize,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
           elevation: 0,

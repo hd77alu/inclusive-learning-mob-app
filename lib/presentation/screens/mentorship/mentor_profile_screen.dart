@@ -5,6 +5,8 @@ import '/data/models/mentor_model.dart';
 import '/data/models/session_model.dart';
 import '/data/services/firestore_service.dart';
 import '/blocs/session_bloc.dart';
+import '/presentation/widgets/accessible_widgets.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 
 class MentorProfileScreen extends StatelessWidget {
   final Mentor mentor;
@@ -98,7 +100,7 @@ class MentorProfileScreen extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: AccessibleText(
                           mentor.name,
                           style: TextStyle(
                             fontSize: 22,
@@ -116,7 +118,7 @@ class MentorProfileScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: Colors.green),
                           ),
-                          child: const Text(
+                          child: const AccessibleText(
                             'Online',
                             style: TextStyle(
                               color: Colors.green,
@@ -130,7 +132,7 @@ class MentorProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 6),
 
-                  Text(
+                  AccessibleText(
                     mentor.role,
                     style: TextStyle(
                       fontSize: 14,
@@ -145,7 +147,7 @@ class MentorProfileScreen extends StatelessWidget {
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 18),
                       const SizedBox(width: 4),
-                      Text(
+                      AccessibleText(
                         '${mentor.rating}',
                         style: TextStyle(
                           fontSize: 14,
@@ -154,7 +156,7 @@ class MentorProfileScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      AccessibleText(
                         'rating',
                         style: TextStyle(
                           fontSize: 13,
@@ -190,7 +192,7 @@ class MentorProfileScreen extends StatelessWidget {
 
                   // About section
                   if (mentor.description.isNotEmpty) ...[
-                    Text(
+                    AccessibleText(
                       'About',
                       style: TextStyle(
                         fontSize: 16,
@@ -199,7 +201,7 @@ class MentorProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    AccessibleText(
                       mentor.description,
                       style: TextStyle(
                         fontSize: 14,
@@ -229,7 +231,7 @@ class MentorProfileScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => _showBookSessionDialog(builderContext),
                       icon: const Icon(Icons.calendar_today, size: 18),
-                      label: const Text(
+                      label: const AccessibleText(
                         'Book a Session',
                         style: TextStyle(
                           fontSize: 15,
@@ -264,7 +266,7 @@ class MentorProfileScreen extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.message_outlined, size: 18),
-                      label: const Text(
+                      label: const AccessibleText(
                         'Send Message',
                         style: TextStyle(
                           fontSize: 15,
@@ -318,7 +320,7 @@ class MentorProfileScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text(
+                AccessibleText(
                   value,
                   style: const TextStyle(
                     fontSize: 18,
@@ -327,7 +329,7 @@ class MentorProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                AccessibleText(
                   label,
                   style: TextStyle(
                     fontSize: 11,
@@ -364,6 +366,7 @@ class MentorProfileScreen extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtextColor = isDark ? Colors.white70 : Colors.black54;
     final fieldBg = isDark ? const Color(0xFF0D1B1E) : Colors.grey.shade100;
+    final a11y = AccessibilityProvider.of(context);
 
     showDialog(
       context: context,
@@ -476,7 +479,7 @@ class MentorProfileScreen extends StatelessWidget {
                   ].map((slot) {
                     final isSelected = selectedTime == slot;
                     return ChoiceChip(
-                      label: Text(slot, style: const TextStyle(fontSize: 11)),
+                      label: Text(slot, style: TextStyle(fontSize: 11 * a11y.fontSizeMultiplier)),
                       selected: isSelected,
                       onSelected: (value) => setDialogState(() => selectedTime = slot),
                       selectedColor: _teal,

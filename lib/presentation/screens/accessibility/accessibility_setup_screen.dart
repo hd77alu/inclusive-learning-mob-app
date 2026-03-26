@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '/blocs/accessibility_bloc.dart';
 import '/data/services/firestore_service.dart';
+import '/presentation/widgets/accessibility_provider.dart';
+import '/presentation/widgets/accessible_widgets.dart';
 
 class AccessibilitySetupScreen extends StatelessWidget {
   const AccessibilitySetupScreen({super.key});
@@ -21,10 +23,41 @@ class _AccessibilitySetupView extends StatelessWidget {
   static const Color teal = Color(0xFF00D4D4);
 
   static const List<_A11yOption> _options = [
-    _A11yOption(id: 'visual', icon: Icons.visibility_outlined, label: 'Visual', description: 'Screen reader, Enable large text', verified: true),
-    _A11yOption(id: 'auditory', icon: Icons.hearing_outlined, label: 'Auditory', description: 'Captions, Sign Language', verified: false),
-    _A11yOption(id: 'motor', icon: Icons.accessibility_new_outlined, label: 'Motor', description: 'Switch access, Voice control', verified: false),
-    _A11yOption(id: 'cognitive', icon: Icons.psychology_outlined, label: 'Cognitive', description: 'Simplified UI, Focus mode', verified: false),
+    _A11yOption(
+      id: 'default',
+      icon: Icons.settings_outlined,
+      label: 'Default',
+      description: 'Default interface with no adjustments',
+      features: ['Standard text size', 'Normal touch targets', 'Full animations'],
+    ),
+    _A11yOption(
+      id: 'visual',
+      icon: Icons.visibility_outlined,
+      label: 'Visual Support',
+      description: 'Enhanced visibility and readability',
+      features: ['Larger text (1.3x)', 'High contrast colors', 'Screen reader support'],
+    ),
+    _A11yOption(
+      id: 'auditory',
+      icon: Icons.hearing_outlined,
+      label: 'Hearing Support',
+      description: 'Visual alternatives for audio content',
+      features: ['Video captions', 'Visual notifications', 'Sign language support'],
+    ),
+    _A11yOption(
+      id: 'motor',
+      icon: Icons.accessibility_new_outlined,
+      label: 'Motor Support',
+      description: 'Easier interaction and navigation',
+      features: ['Larger buttons (56px)', 'Voice control ready', 'Extended touch areas'],
+    ),
+    _A11yOption(
+      id: 'cognitive',
+      icon: Icons.psychology_outlined,
+      label: 'Cognitive Support',
+      description: 'Simplified and focused experience',
+      features: ['Reduced animations', 'Clearer text (1.15x)', 'Simplified navigation'],
+    ),
   ];
 
   @override
@@ -41,13 +74,12 @@ class _AccessibilitySetupView extends StatelessWidget {
     return BlocListener<AccessibilityBloc, AccessibilityState>(
       listener: (context, state) {
         if (state is AccessibilitySaved) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text('Accessibility preference saved!'),
-            backgroundColor: teal,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ));
-          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(
+            context, 
+            '/', 
+            (_) => false,
+            arguments: {'reloadAccessibility': true},
+          );
         } else if (state is AccessibilityError) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(state.message),
@@ -64,9 +96,9 @@ class _AccessibilitySetupView extends StatelessWidget {
             width: double.infinity,
             color: teal,
             padding: const EdgeInsets.only(top: 50, bottom: 14),
-            child: const Text('Inclusive Learning Platform',
+            child: const Text('Accessibility',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black)),
           ),
           Expanded(
             child: BlocBuilder<AccessibilityBloc, AccessibilityState>(
@@ -85,8 +117,18 @@ class _AccessibilitySetupView extends StatelessWidget {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         _buildStepBar(context),
                         const SizedBox(height: 20),
-                        _buildHeroCard(isWide),
+                        _buildCurrentModeCard(context),
                         const SizedBox(height: 20),
+                        AccessibleText(
+                          'Choose Your Experience',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         ...(_options.map((opt) => _OptionTile(
                           option: opt,
                           isSelected: selectedMode == opt.id,
@@ -118,35 +160,89 @@ class _AccessibilitySetupView extends StatelessWidget {
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
         const Expanded(
-          child: Text('Accessibility Setup',
+          child: Text('Customize Your Experience',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(width: 32),
       ]),
     );
   }
 
+  Widget _buildCurrentModeCard(BuildContext context) {
+    final a11y = AccessibilityProvider.of(context);
+    final currentMode = a11y.mode;
+    final currentOption = _options.firstWhere(
+      (opt) => opt.id == currentMode,
+      orElse: () => _options[0],
+    );
 
-
-  Widget _buildHeroCard(bool isWide) {
     return Container(
-      padding: EdgeInsets.all(isWide ? 28 : 22),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFD966), Color(0xFFFFB347), Color(0xFF00D4D4)],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: teal.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: teal.withValues(alpha: 0.3)),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Tailor Your\nExperience',
-            style: TextStyle(color: Colors.black, fontSize: isWide ? 30 : 26, fontWeight: FontWeight.w900, height: 1.2)),
-        const SizedBox(height: 10),
-        Text("Select the options that best support your needs.\nWe'll adjust the platform to work for you.",
-            style: TextStyle(color: Colors.black.withValues(alpha: 0.6), fontSize: isWide ? 14 : 13, height: 1.5)),
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: teal.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(currentOption.icon, color: teal, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AccessibleText(
+                      'Current Mode',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    AccessibleText(
+                      currentOption.label,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: teal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...currentOption.features.map((feature) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, size: 14, color: teal),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AccessibleText(
+                    feature,
+                    style: TextStyle(
+                      fontSize: 12,
+                      
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
     );
   }
 
@@ -166,7 +262,7 @@ class _AccessibilitySetupView extends StatelessWidget {
         ),
         child: isSaving
             ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
-            : const Text('Continue', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            : const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
       ),
     );
   }
@@ -187,44 +283,95 @@ class _OptionTile extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isSelected ? teal : Colors.grey.shade200, width: isSelected ? 1.8 : 1),
-          boxShadow: [BoxShadow(color: isSelected ? teal.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? teal : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? teal.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.04),
+              blurRadius: isSelected ? 12 : 8,
+              offset: const Offset(0, 2),
+            )
+          ],
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            child: Row(children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: isSelected ? teal.withValues(alpha: 0.12) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? teal.withValues(alpha: 0.15)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    option.icon,
+                    color: isSelected ? teal : Colors.grey.shade500,
+                    size: 24,
+                  ),
                 ),
-                child: Icon(option.icon, color: isSelected ? teal : Colors.grey.shade500, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Row(children: [
-                  Flexible(child: Text(option.label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isSelected ? Colors.black87 : Colors.black54))),
-                  if (option.verified) ...[const SizedBox(width: 6), Icon(Icons.check_circle, color: teal, size: 15)],
-                ]),
-                const SizedBox(height: 3),
-                Text(option.description, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-              ])),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 20, height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: isSelected ? teal : Colors.grey.shade300, width: isSelected ? 5.5 : 1.5),
-                  color: Colors.white,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AccessibleText(
+                        option.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? Colors.black87 : Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      AccessibleText(
+                        option.description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ]),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? teal : Colors.grey.shade300,
+                      width: 2,
+                    ),
+                    color: Colors.white,
+                  ),
+                  child: isSelected
+                      ? Center(
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: teal,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -237,6 +384,13 @@ class _A11yOption {
   final IconData icon;
   final String label;
   final String description;
-  final bool verified;
-  const _A11yOption({required this.id, required this.icon, required this.label, required this.description, required this.verified});
+  final List<String> features;
+  
+  const _A11yOption({
+    required this.id,
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.features,
+  });
 }

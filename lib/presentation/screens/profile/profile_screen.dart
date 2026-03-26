@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '/presentation/widgets/accessible_widgets.dart';
 import 'preferences_screen.dart';
 import '../skills/my_skills_screen.dart';
 import '../course/discover_screen.dart';
@@ -95,8 +96,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         _MenuItem(
                           icon: Icons.accessibility_new_outlined,
-                          label: 'Accessibility Settings',
-                          subtitle: 'Screen reader, captions & more',
+                          label: 'Accessibility',
+                          subtitle: 'Customize your experience',
                           onTap: () => Navigator.pushNamed(
                               context, '/accessibility-setup'),
                         ),
@@ -140,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: OutlinedButton.icon(
                           onPressed: _confirmLogout,
                           icon: const Icon(Icons.logout, color: Colors.red),
-                          label: const Text(
+                          label: const AccessibleText(
                             'LOGOUT',
                             style: TextStyle(
                               color: Colors.red,
@@ -178,15 +179,16 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+          AccessibleIconButton(
+            icon: Icons.arrow_back,
             onPressed: () => Navigator.maybePop(context),
             tooltip: 'Go back',
+            color: Colors.black,
           ),
-          const Expanded(
+          Expanded(
             child: Column(
               children: [
-                Text(
+                AccessibleText(
                   'Inclusive Learning Platform',
                   style: TextStyle(
                     fontSize: 11,
@@ -194,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     color: Colors.black54,
                   ),
                 ),
-                Text(
+                AccessibleText(
                   'My Profile',
                   style: TextStyle(
                     fontSize: 16,
@@ -205,10 +207,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black87),
+          AccessibleIconButton(
+            icon: Icons.logout,
             tooltip: 'LOGOUT',
             onPressed: _confirmLogout,
+            color: Colors.black87,
           ),
         ],
       ),
@@ -240,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             CircleAvatar(
               radius: 40,
               backgroundColor: _teal,
-              child: Text(
+              child: AccessibleText(
                 initials.toUpperCase(),
                 style: const TextStyle(
                   fontSize: 24,
@@ -250,7 +253,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            AccessibleText(
               displayName,
               style: TextStyle(
                 fontSize: 20,
@@ -271,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   children: [
                     Icon(Icons.verified, size: 14, color: Colors.green.shade700),
                     const SizedBox(width: 4),
-                    Text(
+                    AccessibleText(
                       'Verified',
                       style: TextStyle(
                         fontSize: 12,
@@ -294,7 +297,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   children: [
                     Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
                     const SizedBox(width: 4),
-                    Text(
+                    AccessibleText(
                       'Unverified',
                       style: TextStyle(
                         fontSize: 12,
@@ -350,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             Icon(icon, color: _teal, size: 22),
             const SizedBox(height: 6),
-            Text(
+            AccessibleText(
               value,
               style: TextStyle(
                 fontSize: 18,
@@ -359,7 +362,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 2),
-            Text(
+            AccessibleText(
               label,
               style: TextStyle(
                 fontSize: 11,
@@ -376,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildSectionLabel(String label) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Text(
+      child: AccessibleText(
         label.toUpperCase(),
         style: TextStyle(
           fontSize: 11,
@@ -435,7 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            AccessibleText(
                               item.label,
                               style: TextStyle(
                                 fontSize: 14,
@@ -444,7 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
                             if (item.subtitle != null)
-                              Text(
+                              AccessibleText(
                                 item.subtitle!,
                                 style: TextStyle(
                                   fontSize: 12,

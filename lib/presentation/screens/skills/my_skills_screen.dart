@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '/blocs/skills_bloc.dart';
 import '/data/services/firestore_service.dart';
 import '/data/models/skill_model.dart';
+import '/presentation/widgets/accessible_widgets.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 
 class MySkillsScreen extends StatefulWidget {
   const MySkillsScreen({super.key});
@@ -153,7 +155,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                AccessibleText(
                   'Inclusive Learning Platform',
                   style: TextStyle(
                     fontSize: 11,
@@ -161,7 +163,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
                     color: Colors.black54,
                   ),
                 ),
-                Text(
+                AccessibleText(
                   'My Skills',
                   style: TextStyle(
                     fontSize: 16,
@@ -188,7 +190,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-            child: Text(
+            child: AccessibleText(
               'SKILL PORTFOLIO',
               style: TextStyle(
                 fontSize: 11,
@@ -275,7 +277,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
         children: [
           Icon(icon, color: _teal, size: 20),
           const SizedBox(height: 6),
-          Text(
+          AccessibleText(
             value,
             style: const TextStyle(
               fontSize: 20,
@@ -284,7 +286,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
             ),
           ),
           const SizedBox(height: 2),
-          Text(
+          AccessibleText(
             label,
             style: TextStyle(
               fontSize: 11,
@@ -351,7 +353,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AccessibleText(
                         skill.name,
                         style: const TextStyle(
                           fontSize: 15,
@@ -369,7 +371,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
                           color: cfg.bg,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
+                        child: AccessibleText(
                           skill.level.isNotEmpty ? skill.level : 'Unknown',
                           style: TextStyle(
                             fontSize: 11,
@@ -435,7 +437,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            const AccessibleText(
               'No skills added yet',
               style: TextStyle(
                 fontSize: 18,
@@ -443,7 +445,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            AccessibleText(
               'Add your first skill to start building your portfolio and showcase your abilities.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -460,15 +462,16 @@ class _MySkillsScreenState extends State<MySkillsScreen>
 
   // ─── FAB ─────────────────────────────────────────────────────────────────
   Widget _buildFAB(BuildContext ctx) {
+    final a11y = AccessibilityProvider.of(context);
     return BlocBuilder<SkillsBloc, SkillsState>(
       builder: (blocCtx, _) => FloatingActionButton.extended(
         onPressed: () => _showSkillDialog(blocCtx),
         backgroundColor: _teal,
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add_rounded),
-        label: const Text(
+        label: Text(
           'Add Skill',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14 * a11y.fontSizeMultiplier),
         ),
       ),
     );
@@ -482,6 +485,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
     if (!_levelOptions.contains(selectedLevel)) {
       selectedLevel = _levelOptions.first;
     }
+    final a11y = AccessibilityProvider.of(context);
 
     showDialog(
       context: blocCtx,
@@ -549,7 +553,7 @@ class _MySkillsScreenState extends State<MySkillsScreen>
                       child: Text(
                         level,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 13 * a11y.fontSizeMultiplier,
                           fontWeight: FontWeight.w700,
                           color: isSelected ? Colors.white : cfg.color,
                         ),

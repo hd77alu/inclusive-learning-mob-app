@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '/blocs/session_bloc.dart';
 import '/data/services/firestore_service.dart';
 import '/data/models/session_model.dart';
+import '/presentation/widgets/accessible_widgets.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 
 class MySessionsScreen extends StatefulWidget {
   const MySessionsScreen({super.key});
@@ -95,7 +97,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
           const Expanded(
             child: Column(
               children: [
-                Text(
+                AccessibleText(
                   'Inclusive Learning Platform',
                   style: TextStyle(
                     fontSize: 11,
@@ -103,7 +105,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
                     color: Colors.black54,
                   ),
                 ),
-                Text(
+                AccessibleText(
                   'My Sessions',
                   style: TextStyle(
                     fontSize: 16,
@@ -121,6 +123,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
   }
 
   Widget _buildTabBar(bool isDark, BuildContext blocContext) {
+    final a11y = AccessibilityProvider.of(context);
     return Container(
       color: isDark ? const Color(0xFF1A2426) : Colors.white,
       child: TabBar(
@@ -135,7 +138,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
         indicatorColor: _teal,
         labelColor: _teal,
         unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+        labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 14 * a11y.fontSizeMultiplier),
         tabs: const [
           Tab(text: 'Upcoming'),
           Tab(text: 'Past'),
@@ -205,7 +208,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
               ),
             ),
             const SizedBox(height: 20),
-            Text(
+            AccessibleText(
               isUpcoming ? 'No upcoming sessions' : 'No past sessions',
               style: const TextStyle(
                 fontSize: 18,
@@ -213,7 +216,7 @@ class _MySessionsScreenState extends State<MySessionsScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            AccessibleText(
               isUpcoming
                   ? 'Book a session with a mentor to get started'
                   : 'Your completed sessions will appear here',
@@ -297,7 +300,7 @@ class _SessionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AccessibleText(
                         session.mentorName,
                         style: TextStyle(
                           fontSize: 16,
@@ -313,7 +316,7 @@ class _SessionCard extends StatelessWidget {
                           color: _getStatusColor().withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
+                        child: AccessibleText(
                           _getStatusLabel(),
                           style: TextStyle(
                             fontSize: 11,
@@ -332,14 +335,14 @@ class _SessionCard extends StatelessWidget {
               children: [
                 Icon(Icons.calendar_today, size: 16, color: subtextColor),
                 const SizedBox(width: 6),
-                Text(
+                AccessibleText(
                   '${session.date.day}/${session.date.month}/${session.date.year}',
                   style: TextStyle(fontSize: 13, color: textColor),
                 ),
                 const SizedBox(width: 16),
                 Icon(Icons.access_time, size: 16, color: subtextColor),
                 const SizedBox(width: 6),
-                Text(
+                AccessibleText(
                   session.timeSlot,
                   style: TextStyle(fontSize: 13, color: textColor),
                 ),
@@ -361,7 +364,7 @@ class _SessionCard extends StatelessWidget {
                     Icon(Icons.note_outlined, size: 16, color: subtextColor),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(
+                      child: AccessibleText(
                         session.note,
                         style: TextStyle(fontSize: 12, color: subtextColor),
                       ),
@@ -377,7 +380,7 @@ class _SessionCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => _confirmCancel(context),
                   icon: const Icon(Icons.cancel_outlined, size: 16),
-                  label: const Text('Cancel Session'),
+                  label: const AccessibleText('Cancel Session'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
