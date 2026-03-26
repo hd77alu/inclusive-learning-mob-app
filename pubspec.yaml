@@ -44,6 +44,7 @@ dependencies:
   firebase_storage: ^13.1.0
   image_picker: ^1.2.1
   url_launcher: ^6.3.2
+  speech_to_text: ^7.3.0
   
 
 dev_dependencies:

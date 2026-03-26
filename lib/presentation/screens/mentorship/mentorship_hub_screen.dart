@@ -7,6 +7,7 @@ import '/data/services/firestore_service.dart';
 import '/data/models/mentor_model.dart';
 import '/presentation/widgets/accessible_widgets.dart';
 import '/presentation/widgets/accessibility_provider.dart';
+import '/presentation/widgets/voice_search_button.dart';
 
 class MentorshipHubScreen extends StatefulWidget {
   const MentorshipHubScreen({super.key});
@@ -136,8 +137,18 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
             hintText: 'Search mentors by specialty...',
             hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
             prefixIcon: const Icon(Icons.search, color: Colors.grey),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? Semantics(
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                VoiceSearchButton(
+                  onResult: (text) {
+                    _searchController.text = text;
+                    setState(() {});
+                  },
+                  color: Colors.grey,
+                ),
+                if (_searchController.text.isNotEmpty)
+                  Semantics(
                     button: true,
                     label: 'Clear search',
                     child: IconButton(
@@ -147,8 +158,9 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
                         setState(() {});
                       },
                     ),
-                  )
-                : null,
+                  ),
+              ],
+            ),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 0),
