@@ -61,6 +61,15 @@ We built a **mode-based accessibility system** with 5 distinct modes:
 13. [Best Practices](#best-practices)
 14. [Important Notes](#important-notes)
 15. [Future Enhancements](#future-enhancements)
+16. [State Management Architecture](#state-management-architecture)
+    - [BLoC Pattern Implementation](#bloc-pattern-implementation)
+    - [Architecture Overview](#architecture-overview)
+    - [State Flow](#state-flow)
+    - [BLoC Structure](#bloc-structure)
+    - [Key Benefits](#key-benefits)
+    - [Implementation Details](#implementation-details)
+    - [Migration from setState](#migration-from-setstate)
+    - [For Other Developers](#for-other-developers)
 
 ---
 
@@ -462,7 +471,7 @@ Widget buildCard() {
 ### Result
 
 #### Default Mode
-- Looks exactly the same as before ✓
+- Looks exactly the same as before
 
 #### Visual Mode
 - Title: 18px → 23.4px (1.3x)
@@ -561,21 +570,21 @@ AlertDialog(
 ## Where to Apply
 
 ### High Priority (Apply First)
-- ✅ Buttons and interactive elements
-- ✅ Text content (headings, body text)
-- ✅ Navigation elements
-- ✅ Form inputs
+- Buttons and interactive elements
+- Text content (headings, body text)
+- Navigation elements
+- Form inputs
 
 ### Medium Priority
-- ✅ Cards and containers
-- ✅ Animations and transitions
-- ✅ Icons and images
-- ✅ Chips and tags
+- Cards and containers
+- Animations and transitions
+- Icons and images
+- Chips and tags
 
 ### Low Priority
-- 🔵 Decorative elements
-- 🔵 Background animations
-- 🔵 Non-critical UI
+- Decorative elements
+- Background animations
+- Non-critical UI
 
 ---
 
@@ -632,3 +641,239 @@ AlertDialog(
 - [ ] Switch access navigation
 - [ ] Focus mode UI simplification
 - [ ] Haptic feedback for motor mode
+
+---
+
+## State Management Architecture
+
+### BLoC Pattern Implementation
+
+The accessibility system uses **BLoC (Business Logic Component)** pattern for state management, ensuring clean separation of concerns and maintainable code.
+
+#### Architecture Overview
+
+**Key Components:**
+1. **AccessibilityBloc** (`lib/blocs/accessibility_bloc.dart`) - Manages all accessibility state
+2. **AccessibilityService** - Provides UI adjustments based on mode
+3. **AccessibilityProvider** - Makes service available throughout widget tree
+4. **Accessible Widgets** - Auto-adjust based on current mode
+
+#### State Flow
+
+**Loading on App Start:**
+```
+1. MainApp builds
+2. AccessibilityBloc created with LoadAccessibilityPreference event
+3. BLoC loads preference from Firestore
+4. BLoC emits AccessibilityLoaded with service
+5. AccessibilityProvider rebuilds with new service
+6. All accessible widgets automatically update
+```
+
+**Saving Preference:**
+```
+1. User selects mode in AccessibilitySetupScreen
+2. User taps "Save Changes"
+3. BLoC receives SaveAccessibilityPreference event
+4. BLoC saves to Firestore
+5. BLoC emits AccessibilitySaved with new service
+6. Navigation to home screen
+7. BlocListener in AuthGate shows success message
+8. AccessibilityProvider rebuilds with new service
+9. All accessible widgets automatically update
+```
+
+#### BLoC Structure
+
+**Events:**
+```dart
+abstract class AccessibilityEvent {}
+
+class LoadAccessibilityPreference extends AccessibilityEvent {}
+
+class SelectAccessibilityMode extends AccessibilityEvent {
+  final String mode;
+  SelectAccessibilityMode(this.mode);
+}
+
+class SaveAccessibilityPreference extends AccessibilityEvent {
+  final String mode;
+  SaveAccessibilityPreference(this.mode);
+}
+```
+
+**States:**
+```dart
+abstract class AccessibilityState {
+  final AccessibilityService service;
+  AccessibilityState(this.service);
+}
+
+class AccessibilityInitial extends AccessibilityState {}
+class AccessibilityLoading extends AccessibilityState {}
+class AccessibilityLoaded extends AccessibilityState {
+  final AccessibilityPreference? preference;
+  final String? pendingSelection;
+}
+class AccessibilitySaving extends AccessibilityState {}
+class AccessibilitySaved extends AccessibilityState {
+  final bool showSuccessMessage;
+}
+class AccessibilityError extends AccessibilityState {}
+```
+
+#### Key Benefits
+
+**1. Separation of Concerns**
+- Business logic in `blocs/` folder
+- UI logic in `presentation/` folder
+- No business logic in UI files
+
+**2. Testability**
+- BLoC can be unit tested independently
+- No need to test UI to test business logic
+- Easy to mock dependencies
+
+**3. Maintainability**
+- Single source of truth for accessibility state
+- Predictable state changes
+- Easy to debug with BLoC observer
+- Less boilerplate code
+
+**4. Scalability**
+- Easy to add new accessibility features
+- Can add more events/states without touching UI
+- Consistent pattern across the app
+
+#### Implementation Details
+
+**MainApp Setup:**
+```dart
+class MainApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AccessibilityBloc>(
+          create: (_) => AccessibilityBloc(FirestoreService())
+            ..add(LoadAccessibilityPreference()),
+        ),
+        // ... other providers
+      ],
+      child: BlocBuilder<AccessibilityBloc, AccessibilityState>(
+        builder: (context, a11yState) {
+          return AccessibilityProvider(
+            service: a11yState.service,
+            child: MaterialApp(...),
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+**Setup Screen Usage:**
+```dart
+// Uses the global BLoC from main.dart
+class AccessibilitySetupScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AccessibilityBloc, AccessibilityState>(
+      listener: (context, state) {
+        if (state is AccessibilitySaved) {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+        }
+      },
+      child: BlocBuilder<AccessibilityBloc, AccessibilityState>(
+        builder: (context, state) {
+          final selectedMode = state is AccessibilityLoaded 
+            ? state.effectiveMode 
+            : null;
+          // ... UI
+        },
+      ),
+    );
+  }
+}
+```
+
+**Success Message:**
+```dart
+// In AuthGate (home route)
+BlocListener<AccessibilityBloc, AccessibilityState>(
+  listener: (context, state) {
+    if (state is AccessibilitySaved && state.showSuccessMessage) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Accessibility preference saved!')),
+      );
+    }
+  },
+  child: // ... screens
+)
+```
+
+#### Migration from setState
+
+The accessibility system was refactored from `setState` to BLoC pattern:
+
+**Before (setState):**
+- `MainApp` was a `StatefulWidget` with local state
+- Used `setState` to update `_accessibilityService`
+- Business logic mixed with UI in `main.dart`
+- Manual state management with `initState`, `mounted` checks
+
+**After (BLoC):**
+- `MainApp` is now a `StatelessWidget`
+- All state managed by `AccessibilityBloc`
+- Business logic in `lib/blocs/accessibility_bloc.dart`
+- Automatic state updates via BLoC streams
+- Removed 60+ lines of state management code
+
+#### For Other Developers
+
+If you're working on features that need global state:
+
+1. **Create a BLoC** in `lib/blocs/` folder
+2. **Define Events** for user actions
+3. **Define States** for different UI states
+4. **Implement handlers** for each event
+5. **Use BlocProvider** at the appropriate level
+6. **Use BlocBuilder** to rebuild UI
+7. **Use BlocListener** for side effects (navigation, snackbars)
+
+**Example Pattern:**
+```dart
+// 1. Create BLoC
+class FeatureBloc extends Bloc<FeatureEvent, FeatureState> {
+  FeatureBloc() : super(FeatureInitial()) {
+    on<LoadFeature>(_onLoad);
+  }
+  
+  Future<void> _onLoad(LoadFeature event, Emitter<FeatureState> emit) async {
+    emit(FeatureLoading());
+    try {
+      final data = await repository.load();
+      emit(FeatureLoaded(data));
+    } catch (e) {
+      emit(FeatureError(e.toString()));
+    }
+  }
+}
+
+// 2. Provide BLoC
+BlocProvider(
+  create: (_) => FeatureBloc()..add(LoadFeature()),
+  child: FeatureScreen(),
+)
+
+// 3. Build UI
+BlocBuilder<FeatureBloc, FeatureState>(
+  builder: (context, state) {
+    if (state is FeatureLoading) return LoadingWidget();
+    if (state is FeatureLoaded) return DataWidget(state.data);
+    if (state is FeatureError) return ErrorWidget(state.message);
+    return SizedBox();
+  },
+)
+```

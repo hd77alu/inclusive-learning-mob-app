@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '/blocs/accessibility_bloc.dart';
-import '/data/services/firestore_service.dart';
-import '/presentation/widgets/accessibility_provider.dart';
 import '/presentation/widgets/accessible_widgets.dart';
 
 class AccessibilitySetupScreen extends StatelessWidget {
@@ -11,10 +9,7 @@ class AccessibilitySetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => AccessibilityBloc(FirestoreService())..add(LoadAccessibilityPreference()),
-      child: const _AccessibilitySetupView(),
-    );
+    return const _AccessibilitySetupView();
   }
 }
 
@@ -78,7 +73,6 @@ class _AccessibilitySetupView extends StatelessWidget {
             context, 
             '/', 
             (_) => false,
-            arguments: {'reloadAccessibility': true},
           );
         } else if (state is AccessibilityError) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -170,79 +164,82 @@ class _AccessibilitySetupView extends StatelessWidget {
   }
 
   Widget _buildCurrentModeCard(BuildContext context) {
-    final a11y = AccessibilityProvider.of(context);
-    final currentMode = a11y.mode;
-    final currentOption = _options.firstWhere(
-      (opt) => opt.id == currentMode,
-      orElse: () => _options[0],
-    );
+    return BlocBuilder<AccessibilityBloc, AccessibilityState>(
+      builder: (context, state) {
+        final currentMode = state.service.mode;
+        final currentOption = _options.firstWhere(
+          (opt) => opt.id == currentMode,
+          orElse: () => _options[0],
+        );
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: teal.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: teal.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: teal.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: teal.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: teal.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(currentOption.icon, color: teal, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AccessibleText(
-                      'Current Mode',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: teal.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    AccessibleText(
-                      currentOption.label,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: teal,
+                    child: Icon(currentOption.icon, color: teal, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AccessibleText(
+                          'Current Mode',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        AccessibleText(
+                          currentOption.label,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...currentOption.features.map((feature) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 14, color: teal),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: AccessibleText(
+                        feature,
+                        style: TextStyle(
+                          fontSize: 12,
+                          
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
+              )),
             ],
           ),
-          const SizedBox(height: 12),
-          ...currentOption.features.map((feature) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, size: 14, color: teal),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AccessibleText(
-                    feature,
-                    style: TextStyle(
-                      fontSize: 12,
-                      
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )),
-        ],
-      ),
+        );
+      },
     );
   }
 
