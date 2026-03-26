@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ───────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidSkill() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'level'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 100
+        && data.level is string
+        && data.level in ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+    }
+
+    function isValidAccessibilityMode() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['selectedMode'])
+        && data.selectedMode in ['visual', 'auditory', 'motor', 'cognitive'];
+    }
+
+    function isValidSessionStatus() {
+      let data = request.resource.data;
+      return data.status in ['pending', 'confirmed', 'cancelled', 'completed'];
+    }
+
+    // ── Users ──────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // Skills — only the owning user can CRUD their skills
+      match /skills/{skillId} {
+        allow read, list: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidSkill();
+        allow update: if isOwner(uid) && isValidSkill();
+        allow delete: if isOwner(uid);
+      }
+
+      // Course progress — only the owning user can read/write
+      match /course_progress/{courseId} {
+        allow read, list: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasAll(['courseId', 'progress'])
+          && request.resource.data.progress is number
+          && request.resource.data.progress >= 0
+          && request.resource.data.progress <= 1;
+        allow delete: if isOwner(uid);
+      }
+
+      // Bookmarked mentors — only the owning user can read/write
+      match /bookmarks/{mentorId} {
+        allow read, list: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasAll(['mentorId', 'savedAt']);
+        allow delete: if isOwner(uid);
+      }
+
+      // Accessibility settings — only the owning user can read/write
+      match /settings/accessibility {
+        allow read: if isOwner(uid);
+        allow write: if isOwner(uid) && isValidAccessibilityMode();
+      }
+
+      // User's own sessions
+      match /my_sessions/{sessionId} {
+        allow read, list: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidSessionStatus();
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // ── Sessions (top-level collection) ────────────────────────────────────
+    // A user can read/write only their own sessions
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && isValidSessionStatus();
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && isValidSessionStatus();
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // ── Mentors ────────────────────────────────────────────────────────────
+    match /mentors/{mentorId} {
+      allow read, list: if isSignedIn();
+      allow write: if false;
+
+      // Mentor sessions — readable by the session owner or the mentor
+      match /mentor_sessions/{sessionId} {
+        allow read: if isSignedIn()
+          && (resource.data.userId == request.auth.uid
+            || resource.data.mentorId == mentorId);
+        allow create, update: if isSignedIn()
+          && request.resource.data.userId == request.auth.uid
+          && isValidSessionStatus();
+        allow delete: if false;
+      }
+    }
+
+    // ── Courses ────────────────────────────────────────────────────────────
+    match /courses/{courseId} {
+      allow read, list: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ── Deny everything else ───────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
