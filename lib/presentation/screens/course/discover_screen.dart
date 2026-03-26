@@ -8,6 +8,7 @@ import '/data/models/course_progress_model.dart';
 import '/data/services/firestore_service.dart';
 import '/presentation/widgets/accessible_widgets.dart';
 import '/presentation/widgets/accessibility_provider.dart';
+import '/presentation/widgets/voice_search_button.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -150,8 +151,18 @@ class _DiscoverViewState extends State<_DiscoverView> {
             hintText: 'Search courses...',
             hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
             prefixIcon: const Icon(Icons.search, color: Colors.grey),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? Semantics(
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                VoiceSearchButton(
+                  onResult: (text) {
+                    _searchController.text = text;
+                    context.read<DiscoverBloc>().add(SearchCourses(text));
+                  },
+                  color: Colors.grey,
+                ),
+                if (_searchController.text.isNotEmpty)
+                  Semantics(
                     button: true,
                     label: 'Clear search',
                     child: IconButton(
@@ -161,8 +172,9 @@ class _DiscoverViewState extends State<_DiscoverView> {
                         context.read<DiscoverBloc>().add(SearchCourses(''));
                       },
                     ),
-                  )
-                : null,
+                  ),
+              ],
+            ),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 0),
