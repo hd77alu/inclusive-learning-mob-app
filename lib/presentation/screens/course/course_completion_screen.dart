@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '/presentation/widgets/accessible_widgets.dart';
 
 class CourseCompletionScreen extends StatefulWidget {
   const CourseCompletionScreen({super.key});
@@ -177,7 +178,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
           color: _teal,
           borderRadius: BorderRadius.circular(30),
         ),
-        child: const Text(
+        child: const AccessibleText(
           'Congratulations!',
           style: TextStyle(
             fontSize: 20,
@@ -194,7 +195,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
       opacity: _fadeAnim,
       child: const Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
-        child: Text(
+        child: AccessibleText(
           'You have successfully completed this course.',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -231,7 +232,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
             children: [
               const Icon(Icons.workspace_premium, color: _teal, size: 32),
               const SizedBox(height: 10),
-              const Text(
+              const AccessibleText(
                 'Certificate of Completion',
                 style: TextStyle(
                   color: Colors.white,
@@ -240,7 +241,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              AccessibleText(
                 displayName,
                 style: const TextStyle(
                   color: _teal,
@@ -249,7 +250,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
+              AccessibleText(
                 'Inclusive Learning Platform',
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
@@ -279,7 +280,7 @@ class _CourseCompletionScreenState extends State<CourseCompletionScreen>
             ),
             elevation: 0,
           ),
-          child: const Text(
+          child: const AccessibleText(
             'Back to Courses',
             style: TextStyle(
               fontSize: 15,

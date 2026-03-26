@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/blocs/theme_bloc.dart';
+import '/presentation/widgets/accessible_widgets.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -52,7 +53,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Preferences', style: TextStyle(color: textColor)),
+        title: AccessibleText('Preferences', style: TextStyle(color: textColor)),
         backgroundColor: isDarkMode ? const Color(0xFF112324) : null,
         iconTheme: isDarkMode ? const IconThemeData(color: Colors.white) : null,
       ),
@@ -61,8 +62,8 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         child: ListView(
           children: [
             SwitchListTile(
-              title: Text('Dark Mode', style: TextStyle(color: textColor)),
-              subtitle: Text('Enable dark theme', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+              title: AccessibleText('Dark Mode', style: TextStyle(color: textColor)),
+              subtitle: AccessibleText('Enable dark theme', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
               value: _localDarkMode ?? isDarkMode,
               onChanged: (value) {
                 setState(() => _localDarkMode = value);
@@ -71,16 +72,16 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               secondary: Icon(Icons.dark_mode, color: textColor),
             ),
             SwitchListTile(
-              title: Text('Notifications', style: TextStyle(color: textColor)),
-              subtitle: Text('Enable push notifications', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
+              title: AccessibleText('Notifications', style: TextStyle(color: textColor)),
+              subtitle: AccessibleText('Enable push notifications', style: TextStyle(color: textColor?.withValues(alpha: 0.7))),
               value: _notifications,
               onChanged: _saveNotifications,
               secondary: Icon(Icons.notifications, color: textColor),
             ),
             ListTile(
               leading: Icon(Icons.language, color: textColor),
-              title: Text('Language', style: TextStyle(color: textColor)),
-              subtitle: Text(_language, style: TextStyle(color: textColor)),
+              title: AccessibleText('Language', style: TextStyle(color: textColor)),
+              subtitle: AccessibleText(_language, style: TextStyle(color: textColor)),
                   trailing: DropdownButton<String>(
                     value: _language,
                     dropdownColor: isDarkMode ? const Color(0xFF112324) : null,

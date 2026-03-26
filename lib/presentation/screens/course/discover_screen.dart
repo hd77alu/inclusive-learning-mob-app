@@ -6,6 +6,8 @@ import '/blocs/discover_bloc.dart';
 import '/data/models/course_model.dart';
 import '/data/models/course_progress_model.dart';
 import '/data/services/firestore_service.dart';
+import '/presentation/widgets/accessible_widgets.dart';
+import '/presentation/widgets/accessibility_provider.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -104,7 +106,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
           const Expanded(
             child: Column(
               children: [
-                Text(
+                AccessibleText(
                   'Inclusive Learning Platform',
                   style: TextStyle(
                     fontSize: 11,
@@ -112,7 +114,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
                     color: Colors.black54,
                   ),
                 ),
-                Text(
+                AccessibleText(
                   'Discover',
                   style: TextStyle(
                     fontSize: 16,
@@ -165,6 +167,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
       builder: (context, state) {
         final selected =
             state is DiscoverLoaded ? state.selectedCategory : 'All';
+        final a11y = AccessibilityProvider.of(context);
         return SizedBox(
           height: 44,
           child: ListView.separated(
@@ -185,7 +188,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.black : Colors.grey.shade700,
                   fontWeight: FontWeight.w600,
-                  fontSize: 12,
+                  fontSize: 12 * a11y.fontSizeMultiplier,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -249,7 +252,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
         children: [
           Icon(Icons.search_off, size: 72, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          Text(
+          AccessibleText(
             'No courses found',
             style: TextStyle(
               fontSize: 16,
@@ -258,7 +261,7 @@ class _DiscoverViewState extends State<_DiscoverView> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          AccessibleText(
             'Try a different search or category',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
           ),
@@ -364,6 +367,7 @@ class _CourseCard extends StatelessWidget {
     final isCompleted = progressVal >= 1.0;
     final hasStarted = progressVal > 0.0 && progressVal < 1.0;
     final iconColor = Color(course.iconColorValue);
+    final a11y = AccessibilityProvider.of(context);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -420,7 +424,7 @@ class _CourseCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      AccessibleText(
                         course.module,
                         style: const TextStyle(
                           fontSize: 10,
@@ -437,7 +441,7 @@ class _CourseCard extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           const SizedBox(width: 3),
-                          Text(
+                          AccessibleText(
                             course.duration,
                             style: TextStyle(
                               fontSize: 11,
@@ -449,7 +453,7 @@ class _CourseCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AccessibleText(
                     course.title,
                     style: const TextStyle(
                       fontSize: 15,
@@ -457,7 +461,7 @@ class _CourseCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  AccessibleText(
                     course.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -470,8 +474,8 @@ class _CourseCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Chip(
                     label: Text(course.category),
-                    labelStyle: const TextStyle(
-                      fontSize: 10,
+                    labelStyle: TextStyle(
+                      fontSize: 10 * a11y.fontSizeMultiplier,
                       fontWeight: FontWeight.w600,
                     ),
                     backgroundColor: teal.withValues(alpha: 0.12),
@@ -497,7 +501,7 @@ class _CourseCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        AccessibleText(
                           '${(progressVal * 100).round()}%',
                           style: TextStyle(
                             fontSize: 11,
@@ -579,7 +583,7 @@ class _CourseCard extends StatelessWidget {
           children: [
             Icon(icon, size: 15, color: teal),
             const SizedBox(width: 4),
-            Text(
+            AccessibleText(
               label,
               style: const TextStyle(
                 fontSize: 11,
@@ -594,13 +598,14 @@ class _CourseCard extends StatelessWidget {
   }
 
   void _showCourseDialog(BuildContext context, double currentProgress) {
+    final a11y = AccessibilityProvider.of(context);
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           course.title,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16 * a11y.fontSizeMultiplier),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -608,12 +613,12 @@ class _CourseCard extends StatelessWidget {
           children: [
             Text(
               course.description,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13 * a11y.fontSizeMultiplier),
             ),
             const SizedBox(height: 16),
             Text(
               'Current Progress: ${(currentProgress * 100).round()}%',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13 * a11y.fontSizeMultiplier),
             ),
             const SizedBox(height: 8),
             ClipRRect(
@@ -631,7 +636,7 @@ class _CourseCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Mark progress:',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 12 * a11y.fontSizeMultiplier, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 8),
               _ProgressSlider(
@@ -670,7 +675,7 @@ class _CourseCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Text('Unmark Completed'),
+              child: Text('Unmark Completed', style: TextStyle(fontSize: 14 * a11y.fontSizeMultiplier)),
             )
           else
             ElevatedButton(
@@ -687,7 +692,7 @@ class _CourseCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Text('Mark as Completed'),
+              child: Text('Mark as Completed', style: TextStyle(fontSize: 14 * a11y.fontSizeMultiplier)),
             ),
         ],
       ),
@@ -802,7 +807,7 @@ class _BookmarkButton extends StatelessWidget {
               color: teal,
             ),
             const SizedBox(width: 4),
-            Text(
+            AccessibleText(
               isBookmarked ? 'Saved' : 'Save',
               style: const TextStyle(
                 fontSize: 11,

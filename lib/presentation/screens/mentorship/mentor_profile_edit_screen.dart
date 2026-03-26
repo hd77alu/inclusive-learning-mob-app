@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '/data/models/mentor_model.dart';
 import '/data/services/firestore_service.dart';
+import '/presentation/widgets/accessible_widgets.dart';
 
 class MentorProfileEditScreen extends StatefulWidget {
   final Mentor mentor;
@@ -96,7 +97,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded, color: _cyan),
-              title: const Text('Take a photo',
+              title: const AccessibleText('Take a photo',
                   style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
@@ -106,7 +107,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
             ListTile(
               leading:
                   const Icon(Icons.photo_library_rounded, color: _cyan),
-              title: const Text('Choose from gallery',
+              title: const AccessibleText('Choose from gallery',
                   style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
@@ -130,7 +131,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
         backgroundColor: _cyan,
         foregroundColor: Colors.black,
         elevation: 0,
-        title: const Text('Edit Mentor Profile',
+        title: const AccessibleText('Edit Mentor Profile',
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
@@ -214,7 +215,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  AccessibleText(
                     widget.mentor.name,
                     style: const TextStyle(
                       color: Colors.white,
@@ -223,12 +224,12 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  AccessibleText(
                     widget.mentor.role,
                     style: const TextStyle(color: _cyan, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  AccessibleText(
                     widget.mentor.description,
                     style: const TextStyle(
                         color: Colors.white70, fontSize: 13),
@@ -246,7 +247,7 @@ class _MentorProfileEditScreenState extends State<MentorProfileEditScreen> {
               child: ElevatedButton.icon(
                 onPressed: _uploading ? null : _showPickerSheet,
                 icon: const Icon(Icons.upload_rounded, color: Colors.black),
-                label: const Text('Change Mentor Photo',
+                label: const AccessibleText('Change Mentor Photo',
                     style: TextStyle(
                         color: Colors.black, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
