@@ -6,7 +6,7 @@ class TranslationService {
   /// Translate text from source language to target language
   Future<String> translate({
     required String text,
-    String from = 'en', // default source (English or your base language)
+    String from = 'en', // default source (English)
     required String to,  // target e.g. 'rw', 'fr'
   }) async {
     if (text.trim().isEmpty) return text;
@@ -19,12 +19,11 @@ class TranslationService {
       );
       return translation.text;
     } catch (e) {
-      print('Translation error: $e');
       return text; // fallback to original text
     }
   }
 
-  /// Optional: Batch translate multiple strings
+  /// Batch translate multiple strings
   Future<List<String>> translateMultiple({
     required List<String> texts,
     String from = 'en',

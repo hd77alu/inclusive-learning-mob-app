@@ -1,6 +1,6 @@
 // lib/bloc/language/language_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // if saving to user profile like accessibility
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 import '../../data/services/translation_service.dart';
 class LanguageCubit extends Cubit<String> {
   LanguageCubit() : super('en'); // default English
@@ -25,7 +25,7 @@ class LanguageCubit extends Cubit<String> {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
-        .update({'preferredLanguage': newLang});
+        .set({'preferredLanguage': newLang}, SetOptions(merge: true));
   }
 
   // Helper to translate any text
