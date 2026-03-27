@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'blocs/auth_bloc.dart';
 import 'blocs/theme_bloc.dart';
 import 'blocs/accessibility_bloc.dart';
+import 'blocs/language_cubit.dart';
 import 'data/services/firestore_service.dart';
 import 'presentation/widgets/accessibility_provider.dart';
 import 'presentation/screens/auth/auth_gate.dart';
@@ -47,6 +48,7 @@ class MainApp extends StatelessWidget {
         BlocProvider<AccessibilityBloc>(
           create: (_) => AccessibilityBloc(FirestoreService())..add(LoadAccessibilityPreference()),
         ),
+        BlocProvider<LanguageCubit>(create: (_) => LanguageCubit()),
       ],
       child: BlocBuilder<AccessibilityBloc, AccessibilityState>(
         builder: (context, a11yState) {

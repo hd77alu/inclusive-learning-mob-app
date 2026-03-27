@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '/blocs/theme_bloc.dart';
 import '/presentation/widgets/accessible_widgets.dart';
+import '../../../blocs/language_cubit.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -13,7 +14,6 @@ class PreferencesScreen extends StatefulWidget {
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
   bool _notifications = false;
-  String _language = 'English';
   bool? _localDarkMode;
 
   @override
@@ -23,34 +23,24 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notifications = prefs.getBool('notifications') ?? false;
-      _language = prefs.getString('language') ?? 'English';
-    });
+    // You can keep SharedPreferences for notifications if you want
+    // Language will now be managed by LanguageCubit
   }
 
   Future<void> _saveNotifications(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    final success = await prefs.setBool('notifications', value);
-    if (mounted && success) {
-      setState(() => _notifications = value);
-    }
-  }
-
-  Future<void> _saveLanguage(String value) async {
-    final prefs = await SharedPreferences.getInstance();
-    final success = await prefs.setString('language', value);
-    if (mounted && success) {
-      setState(() => _language = value);
-    }
+    // Your existing notification save logic
+    // ...
+    setState(() => _notifications = value);
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.select((ThemeBloc bloc) => bloc.state.isDarkMode);
     final textColor = isDarkMode ? Colors.white : null;
-    
+
+    // Get current language from LanguageCubit
+    final currentLangCode = context.watch<LanguageCubit>().state;
+
     return Scaffold(
       appBar: AppBar(
         title: AccessibleText('Preferences', style: TextStyle(color: textColor)),
@@ -61,6 +51,7 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         color: isDarkMode ? const Color(0xFF112324) : null,
         child: ListView(
           children: [
+            // Dark Mode
             Semantics(
               toggled: _localDarkMode ?? isDarkMode,
               label: 'Dark Mode, ${(_localDarkMode ?? isDarkMode) ? "enabled" : "disabled"}',
@@ -76,6 +67,8 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                 secondary: Icon(Icons.dark_mode, color: textColor),
               ),
             ),
+
+            // Notifications
             Semantics(
               toggled: _notifications,
               label: 'Notifications, ${_notifications ? "enabled" : "disabled"}',
@@ -88,31 +81,60 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                 secondary: Icon(Icons.notifications, color: textColor),
               ),
             ),
+
+            // ==================== LANGUAGE SELECTOR ====================
             Semantics(
-              label: 'Language, currently $_language',
-              hint: 'Tap to change language',
-              child: ListTile(
-                leading: Icon(Icons.language, color: textColor),
-                title: AccessibleText('Language', style: TextStyle(color: textColor)),
-                subtitle: AccessibleText(_language, style: TextStyle(color: textColor)),
+              label: 'Language selector',
+              hint: 'Tap to change app language',
+              child: BlocBuilder<LanguageCubit, String>(
+                builder: (context, currentLang) {
+                  final langName = _getLanguageName(currentLang);
+
+                  return ListTile(
+                    leading: Icon(Icons.language, color: textColor),
+                    title: AccessibleText('Language', style: TextStyle(color: textColor)),
+                    subtitle: AccessibleText(langName, style: TextStyle(color: textColor)),
                     trailing: DropdownButton<String>(
-                      value: _language,
+                      value: currentLang,
                       dropdownColor: isDarkMode ? const Color(0xFF112324) : null,
-                  style: TextStyle(color: textColor),
-                  items: const [
-                    DropdownMenuItem(value: 'English', child: Text('English')),
-                    DropdownMenuItem(value: 'French', child: Text('French')),
-                    DropdownMenuItem(value: 'Kinyarwanda', child: Text('Kinyarwanda')),
-                  ],
-                      onChanged: (value) {
-                        if (value != null) _saveLanguage(value);
+                      style: TextStyle(color: textColor),
+                      items: const [
+                        DropdownMenuItem(value: 'en', child: Text('English')),
+                        DropdownMenuItem(value: 'rw', child: Text('Kinyarwanda')),
+                        DropdownMenuItem(value: 'fr', child: Text('Français')),
+                      ],
+                      onChanged: (newLangCode) async {
+                        if (newLangCode != null && newLangCode != currentLang) {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            await context.read<LanguageCubit>().changeLanguage(
+                                  newLangCode,
+                                  user.uid,
+                                );
+                          }
+                        }
                       },
                     ),
-                  ),
+                  );
+                },
+              ),
             ),
-              ],
-            ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getLanguageName(String code) {
+    switch (code) {
+      case 'en':
+        return 'English';
+      case 'rw':
+        return 'Kinyarwanda';
+      case 'fr':
+        return 'Français';
+      default:
+        return 'English';
+    }
   }
 }

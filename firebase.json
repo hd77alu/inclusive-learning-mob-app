@@ -1,1 +1,31 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"inclusivelearningapp","appId":"1:685264593642:android:4a1027af3110b031faed93","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"inclusivelearningapp","configurations":{"android":"1:685264593642:android:4a1027af3110b031faed93","ios":"1:685264593642:ios:b1705e8fe4259637faed93","macos":"1:685264593642:ios:b1705e8fe4259637faed93","web":"1:685264593642:web:b5c497e90ecd06f6faed93","windows":"1:685264593642:web:530d8ad2a34a11d2faed93"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "inclusivelearningapp",
+          "appId": "1:685264593642:android:4a1027af3110b031faed93",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "inclusivelearningapp",
+          "configurations": {
+            "android": "1:685264593642:android:4a1027af3110b031faed93",
+            "ios": "1:685264593642:ios:b1705e8fe4259637faed93",
+            "macos": "1:685264593642:ios:b1705e8fe4259637faed93",
+            "web": "1:685264593642:web:b5c497e90ecd06f6faed93",
+            "windows": "1:685264593642:web:530d8ad2a34a11d2faed93"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "africa-south1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
