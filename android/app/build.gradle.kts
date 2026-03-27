@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.alu.inclusive_app"
+        applicationId = "com.example.inclusive_app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,9 +32,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
     }
 }

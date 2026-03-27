@@ -46,6 +46,10 @@ class _VoiceSearchButtonState extends State<VoiceSearchButton> {
 
     setState(() => _isListening = true);
     await _speech.listen(
+      localeId: 'en_US',
+      listenOptions: SpeechListenOptions(
+        listenMode: ListenMode.confirmation,
+      ),
       onResult: (result) {
         if (result.finalResult) {
           widget.onResult(result.recognizedWords);
